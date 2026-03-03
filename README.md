@@ -23,7 +23,7 @@ git clone https://github.com/wecode-ai/openclaw-weibo.git
 cd openclaw-weibo && openclaw plugins install .
 ```
 
-## OpenClaw 配置
+### 配置OpenClaw 
 
 编辑 `~/.openclaw/openclaw.config.json`：
 
@@ -36,6 +36,11 @@ cd openclaw-weibo && openclaw plugins install .
     }
   }
 }
+```
+或使用命令配置：
+```bash
+openclaw config set 'channels.weibo.appSecret' 'your-appSecret'
+openclaw config set 'channels.weibo.appId' 'your-appId'
 ```
 
 ## License
