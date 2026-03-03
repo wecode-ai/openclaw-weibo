@@ -19,7 +19,7 @@ export const WeiboAccountConfigSchema = z
     name: z.string().optional(),
     appId: z.string().optional(),
     appSecret: z.string().optional(),
-    wsEndpoint: z.string().url().default("ws://open-im.api.weibo.com/ws/openai"),
+    wsEndpoint: z.string().url().default("ws://open-im.api.weibo.com/ws/stream"),
     tokenEndpoint: z.string().url().default("http://open-im.api.weibo.com/open/auth/ws_token"),
     ...WeiboSharedConfigShape,
   })
@@ -30,7 +30,7 @@ export const WeiboConfigSchema = z
     enabled: z.boolean().optional(),
     appId: z.string().optional(),
     appSecret: z.string().optional(),
-    wsEndpoint: z.string().url().default("ws://open-im.api.weibo.com/ws/openai"),
+    wsEndpoint: z.string().url().default("ws://open-im.api.weibo.com/ws/stream"),
     tokenEndpoint: z.string().url().default("http://open-im.api.weibo.com/open/auth/ws_token"),
     ...WeiboSharedConfigShape,
     accounts: z.record(z.string(), WeiboAccountConfigSchema.optional()).optional(),

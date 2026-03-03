@@ -14,6 +14,9 @@ export function resolveWeiboAccount({
 
   const isDefault = accountId === DEFAULT_ACCOUNT_ID;
 
+  const DEFAULT_WS_ENDPOINT = "ws://open-im.api.weibo.com/ws/stream";
+  const DEFAULT_TOKEN_ENDPOINT = "http://open-im.api.weibo.com/open/auth/ws_token";
+
   if (isDefault && weiboCfg) {
     const hasCredentials = !!(weiboCfg.appId && weiboCfg.appSecret);
     return {
@@ -23,13 +26,13 @@ export function resolveWeiboAccount({
       name: "Default",
       appId: weiboCfg.appId,
       appSecret: weiboCfg.appSecret,
-      wsEndpoint: weiboCfg.wsEndpoint,
-      tokenEndpoint: weiboCfg.tokenEndpoint,
+      wsEndpoint: weiboCfg.wsEndpoint ?? DEFAULT_WS_ENDPOINT,
+      tokenEndpoint: weiboCfg.tokenEndpoint ?? DEFAULT_TOKEN_ENDPOINT,
       config: {
         dmPolicy: weiboCfg.dmPolicy ?? "open",
         allowFrom: weiboCfg.allowFrom ?? [],
-        tokenEndpoint: weiboCfg.tokenEndpoint,
-        wsEndpoint: weiboCfg.wsEndpoint,
+        tokenEndpoint: weiboCfg.tokenEndpoint ?? DEFAULT_TOKEN_ENDPOINT,
+        wsEndpoint: weiboCfg.wsEndpoint ?? DEFAULT_WS_ENDPOINT,
         textChunkLimit: weiboCfg.textChunkLimit,
         chunkMode: weiboCfg.chunkMode ?? "newline",
       },
@@ -47,9 +50,6 @@ export function resolveWeiboAccount({
     textChunkLimit: weiboCfg?.textChunkLimit,
     chunkMode: weiboCfg?.chunkMode,
   };
-
-  const DEFAULT_WS_ENDPOINT = "ws://open-im.api.weibo.com/ws/openai";
-  const DEFAULT_TOKEN_ENDPOINT = "http://open-im.api.weibo.com/open/auth/ws_token";
 
   const merged = {
     appId: accountCfg?.appId ?? topLevel.appId,
