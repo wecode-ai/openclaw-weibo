@@ -1,0 +1,49 @@
+{
+  "name": "@yourname/openclaw-weibo",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "OpenClaw Weibo DM channel plugin",
+  "scripts": {
+    "test:unit": "vitest run",
+    "ci:check": "npx tsc --noEmit && npm run test:unit",
+    "build": "tsc",
+    "dev": "tsx"
+  },
+  "license": "MIT",
+  "files": [
+    "index.ts",
+    "src/**/*.ts",
+    "!src/**/__tests__/**",
+    "!src/**/*.test.ts"
+  ],
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ],
+    "channel": {
+      "id": "weibo",
+      "label": "Weibo",
+      "selectionLabel": "Weibo (微博)",
+      "docsPath": "/channels/weibo",
+      "docsLabel": "weibo",
+      "blurb": "Weibo direct message channel.",
+      "order": 80
+    }
+  },
+  "dependencies": {
+    "ws": "^8.18.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.10",
+    "@types/ws": "^8.5.14",
+    "@vitest/coverage-v8": "^2.1.8",
+    "openclaw": "^2026.3.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.8"
+  },
+  "peerDependencies": {
+    "openclaw": ">=2026.3.1"
+  }
+}

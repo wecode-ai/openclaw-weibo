@@ -1,0 +1,93 @@
+import type { ClawdbotConfig } from "openclaw/plugin-sdk";
+import type { WeiboConfig, ResolvedWeiboAccount } from "./types.js";
+
+const DEFAULT_ACCOUNT_ID = "default";
+
+export function resolveWeiboAccount({
+  cfg,
+  accountId = DEFAULT_ACCOUNT_ID,
+}: {
+  cfg: ClawdbotConfig;
+  accountId?: string;
+}): ResolvedWeiboAccount {
+  const weiboCfg = cfg.channels?.weibo as WeiboConfig | undefined;
+
+  const isDefault = accountId === DEFAULT_ACCOUNT_ID;
+
+  if (isDefault && weiboCfg) {
+    const hasCredentials = !!(weiboCfg.appId && weiboCfg.appSecret);
+    return {
+      accountId: DEFAULT_ACCOUNT_ID,
+      enabled: weiboCfg.enabled ?? true,
+      configured: hasCredentials,
+      name: "Default",
+      appId: weiboCfg.appId,
+      appSecret: weiboCfg.appSecret,
+      wsEndpoint: weiboCfg.wsEndpoint,
+      tokenEndpoint: weiboCfg.tokenEndpoint,
+      config: {
+        dmPolicy: weiboCfg.dmPolicy ?? "pairing",
+        allowFrom: weiboCfg.allowFrom ?? [],
+        tokenEndpoint: weiboCfg.tokenEndpoint,
+      },
+    };
+  }
+
+  const accountCfg = weiboCfg?.accounts?.[accountId];
+  const topLevel = {
+    appId: weiboCfg?.appId,
+    appSecret: weiboCfg?.appSecret,
+    wsEndpoint: weiboCfg?.wsEndpoint,
+    tokenEndpoint: weiboCfg?.tokenEndpoint,
+    dmPolicy: weiboCfg?.dmPolicy,
+    allowFrom: weiboCfg?.allowFrom,
+  };
+
+  const merged = {
+    appId: accountCfg?.appId ?? topLevel.appId,
+    appSecret: accountCfg?.appSecret ?? topLevel.appSecret,
+    wsEndpoint: accountCfg?.wsEndpoint ?? topLevel.wsEndpoint,
+    tokenEndpoint: accountCfg?.tokenEndpoint ?? topLevel.tokenEndpoint,
+    dmPolicy: accountCfg?.dmPolicy ?? topLevel.dmPolicy ?? "pairing",
+    allowFrom: accountCfg?.allowFrom ?? topLevel.allowFrom ?? [],
+  };
+
+  const hasCredentials = !!(merged.appId && merged.appSecret);
+
+  return {
+    accountId,
+    enabled: accountCfg?.enabled ?? weiboCfg?.enabled ?? true,
+    configured: hasCredentials,
+    name: accountCfg?.name,
+    appId: merged.appId,
+    appSecret: merged.appSecret,
+    wsEndpoint: merged.wsEndpoint,
+    tokenEndpoint: merged.tokenEndpoint,
+    config: {
+      dmPolicy: merged.dmPolicy,
+      allowFrom: merged.allowFrom,
+      tokenEndpoint: merged.tokenEndpoint,
+    },
+  };
+}
+
+export function listWeiboAccountIds(cfg: ClawdbotConfig): string[] {
+  const weiboCfg = cfg.channels?.weibo as WeiboConfig | undefined;
+  const accounts = weiboCfg?.accounts;
+  const ids = [DEFAULT_ACCOUNT_ID];
+  if (accounts) {
+    ids.push(...Object.keys(accounts));
+  }
+  return ids;
+}
+
+export function resolveDefaultWeiboAccountId(cfg: ClawdbotConfig): string {
+  return DEFAULT_ACCOUNT_ID;
+}
+
+export function listEnabledWeiboAccounts(cfg: ClawdbotConfig): ResolvedWeiboAccount[] {
+  const ids = listWeiboAccountIds(cfg);
+  return ids
+    .map((id) => resolveWeiboAccount({ cfg, accountId: id }))
+    .filter((a) => a.enabled && a.configured);
+}

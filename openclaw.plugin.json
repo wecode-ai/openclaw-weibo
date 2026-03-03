@@ -1,0 +1,11 @@
+{
+    "id": "weibo",
+    "channels": [
+        "weibo"
+    ],
+    "configSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+    }
+}
