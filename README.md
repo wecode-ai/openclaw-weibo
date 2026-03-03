@@ -15,7 +15,57 @@ OpenClaw Weibo DM channel plugin - 微博私信通道插件
 
 ## 安装
 
-### 方法 1: 本地开发（推荐）
+### 快速安装（推荐）
+
+通过与 OpenClaw AI 对话完成安装，无需手动编辑配置文件。
+
+#### 步骤 1：获取应用凭证
+
+1. 打开微博客户端，私信 [@微博龙虾助手](https://weibo.com/u/6808810981)
+2. 发送消息：`连接龙虾`
+3. 收到回复示例：
+   ```
+   您已经生成过应用凭证，无需重复生成。
+
+   AppId: your-app-id
+   App: your-app-secret
+
+   如需重置凭证，请发送 "重置凭证" 命令。
+   ```
+4. **保存好 `AppId` 和 `App`**，下一步会用到
+
+#### 步骤 2：让 OpenClaw 安装插件
+
+1. 打开你的 OpenClaw 对话界面
+2. 发送以下指令（直接复制粘贴）：
+
+   ```
+   安装 插件 https://github.com/wecode-ai/openclaw-weibo
+   ```
+
+3. OpenClaw 安装完成后，继续发送配置指令（将 `your-app-id` 和 `your-app-` 替换为步骤1获取的真实凭证）：
+
+   ```
+   配置如下内容
+   {
+     "channels": {
+       "weibo": {
+         "enabled": true,
+         "appId": "your-app-id",
+         "app": "your-app-secret"
+       }
+     }
+   }
+   ```
+
+4. 等待 OpenClaw 回复配置成功，即可开始使用微博私信功能
+
+> 💡 **提示**：
+> - `wsEndpoint` 和 `tokenEndpoint` 需要替换为你自己的服务器地址
+> - 如果想限制只有特定用户能私信 AI，将用户微博 ID 填入 `allowFrom` 数组
+> - `dmPolicy: "pairing"` 表示需要用户先发消息，AI 才能回复
+
+### 本地开发（推荐）
 
 ```bash
 # 克隆仓库
@@ -29,20 +79,13 @@ npm install
 npm run ci:check
 ```
 
-### 方法 2: 作为 OpenClaw 插件安装
+### 作为 OpenClaw 插件安装
 
-在你的 OpenClaw 项目目录下：
+在项目目录下：
 
 ```bash
 # 安装插件
-npm install /path/to/openclaw-weibo
-
-# 或者在 package.json 中添加
-{
-  "dependencies": {
-    "@yourname/openclaw-weibo": "file:/path/to/openclaw-weibo"
-  }
-}
+openclaw plugins install .
 ```
 
 ## OpenClaw 配置
@@ -56,9 +99,7 @@ npm install /path/to/openclaw-weibo
       "enabled": true,
       "appId": "your-app-id",
       "appSecret": "your-app-secret",
-      "wsEndpoint": "ws://your-websocket-server/ws",
-      "tokenEndpoint": "http://your-token-server:9810/open/auth/ws_token",
-      "dmPolicy": "pairing",
+      "dmPolicy": "open",
       "allowFrom": []
     }
   }
@@ -74,7 +115,7 @@ npm install /path/to/openclaw-weibo
 | `appSecret` | 是 | 开发者应用密钥 |
 | `wsEndpoint` | 是 | WebSocket 服务端点 |
 | `tokenEndpoint` | 否 | Token API 端点（默认: http://localhost:9810/open/auth/ws_token） |
-| `dmPolicy` | 否 | 私信策略，默认 `pairing` |
+| `dmPolicy` | 否 | 私信策略，默认 `open` |
 | `allowFrom` | 否 | 允许列表，用户 ID 数组 |
 | `textChunkLimit` | 否 | 消息分块大小，默认 2000 字符 |
 | `chunkMode` | 否 | 分块模式：`length`（按长度）/ `newline`（按换行），默认 `length` |
