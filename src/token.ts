@@ -30,6 +30,10 @@ export async function fetchWeiboToken(
     throw new Error(`Credentials not configured for account "${account.accountId}"`);
   }
 
+  // Defensive runtime coercion: config may come from untyped sources.
+  const normalizedAppId = String(appId);
+  const normalizedAppSecret = String(appSecret);
+
   const endpoint = tokenEndpoint ?? DEFAULT_TOKEN_ENDPOINT;
 
   const response = await fetch(endpoint, {
@@ -38,8 +42,8 @@ export async function fetchWeiboToken(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      app_id: appId,
-      app_secret: appSecret,
+      app_id: normalizedAppId,
+      app_secret: normalizedAppSecret,
     }),
   });
 
