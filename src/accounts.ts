@@ -29,6 +29,7 @@ export function resolveWeiboAccount({
         dmPolicy: weiboCfg.dmPolicy ?? "open",
         allowFrom: weiboCfg.allowFrom ?? [],
         tokenEndpoint: weiboCfg.tokenEndpoint,
+        wsEndpoint: weiboCfg.wsEndpoint,
         textChunkLimit: weiboCfg.textChunkLimit,
         chunkMode: weiboCfg.chunkMode ?? "newline",
       },
@@ -47,11 +48,14 @@ export function resolveWeiboAccount({
     chunkMode: weiboCfg?.chunkMode,
   };
 
+  const DEFAULT_WS_ENDPOINT = "ws://open-im.api.weibo.com/ws/openai";
+  const DEFAULT_TOKEN_ENDPOINT = "http://open-im.api.weibo.com/open/auth/ws_token";
+
   const merged = {
     appId: accountCfg?.appId ?? topLevel.appId,
     appSecret: accountCfg?.appSecret ?? topLevel.appSecret,
-    wsEndpoint: accountCfg?.wsEndpoint ?? topLevel.wsEndpoint,
-    tokenEndpoint: accountCfg?.tokenEndpoint ?? topLevel.tokenEndpoint,
+    wsEndpoint: accountCfg?.wsEndpoint ?? topLevel.wsEndpoint ?? DEFAULT_WS_ENDPOINT,
+    tokenEndpoint: accountCfg?.tokenEndpoint ?? topLevel.tokenEndpoint ?? DEFAULT_TOKEN_ENDPOINT,
     dmPolicy: accountCfg?.dmPolicy ?? topLevel.dmPolicy ?? "open",
     allowFrom: accountCfg?.allowFrom ?? topLevel.allowFrom ?? [],
     textChunkLimit: accountCfg?.textChunkLimit ?? topLevel.textChunkLimit,
@@ -73,6 +77,7 @@ export function resolveWeiboAccount({
       dmPolicy: merged.dmPolicy,
       allowFrom: merged.allowFrom,
       tokenEndpoint: merged.tokenEndpoint,
+      wsEndpoint: merged.wsEndpoint,
       textChunkLimit: merged.textChunkLimit,
       chunkMode: merged.chunkMode,
     },
