@@ -22,7 +22,7 @@
       "./index.ts"
     ],
     "channel": {
-      "id": "openclaw-weibo",
+      "id": "weibo",
       "label": "Weibo",
       "selectionLabel": "Weibo (微博)",
       "docsPath": "/channels/weibo",
