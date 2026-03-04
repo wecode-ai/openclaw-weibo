@@ -52,6 +52,40 @@ export type WeiboMessageContext = {
   createTime?: number;
 };
 
+export type WeiboResponseInputSource = {
+  type: "base64";
+  media_type: string;
+  data: string;
+};
+
+export type WeiboResponseContentPart =
+  | {
+    type: "input_text";
+    text: string;
+  }
+  | {
+    type: "input_image";
+    source: WeiboResponseInputSource;
+    filename?: string;
+  }
+  | {
+    type: "input_file";
+    source: WeiboResponseInputSource;
+    filename?: string;
+  };
+
+export type WeiboResponseMessageInputItem = {
+  type: "message";
+  role: "system" | "developer" | "user" | "assistant";
+  content: WeiboResponseContentPart[];
+};
+
+export type WeiboInboundAttachmentPart = {
+  mimeType: string;
+  filename?: string;
+  base64: string;
+};
+
 export type WeiboSendResult = {
   messageId: string;
   chatId: string;

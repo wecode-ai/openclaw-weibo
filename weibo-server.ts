@@ -1,13 +1,20 @@
 import http, { type IncomingMessage, type ServerResponse } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { createSimStore, type SimLogLevel, type SimMessageRecord } from "./src/sim-store.js";
-import { getLatestCredentialFromState, getSimPageEndpoints } from "./src/sim-page.js";
+import {
+  buildSimInboundPayload,
+  getLatestCredentialFromState,
+  getSimPageEndpoints,
+  getSimUiUrl,
+} from "./src/sim-page.js";
+import type { WeiboResponseMessageInputItem } from "./src/types.js";
 
 const HTTP_PORT = 9810;
 const WS_PORT = 9999;
 const TOKEN_EXPIRE_SECONDS = 3600;
 const HEARTBEAT_INTERVAL_MS = 30_000;
 const PONG_TIMEOUT_MS = 120_000;
+const MAX_HTTP_BODY_BYTES = 20 * 1024 * 1024;
 
 const DEFAULT_APP_ID = "weibo_test_app";
 const DEFAULT_APP_SECRET = "weibo_test_secret_key_123456";
@@ -48,7 +55,7 @@ async function readJsonBody(req: IncomingMessage): Promise<Record<string, unknow
     let body = "";
     req.on("data", (chunk) => {
       body += chunk;
-      if (body.length > 1024 * 1024) {
+      if (body.length > MAX_HTTP_BODY_BYTES) {
         reject(new Error("Body too large"));
       }
     });
@@ -90,13 +97,26 @@ function log(level: SimLogLevel, message: string, details?: unknown): void {
   }
 }
 
-function pushInboundToPlugin(appId: string, fromUserId: string, text: string): { delivered: number; message: SimMessageRecord } {
+function pushInboundToPlugin(params: {
+  appId: string;
+  fromUserId: string;
+  text: string;
+  input?: WeiboResponseMessageInputItem[];
+}): { delivered: number; message: SimMessageRecord } {
+  const { appId, fromUserId, text, input } = params;
   const message = store.appendMessage({
     direction: "inbound",
     appId,
     fromUserId,
     text,
     timestamp: Date.now(),
+    rawPayload: buildSimInboundPayload({
+      messageId: "",
+      fromUserId,
+      text,
+      timestamp: Date.now(),
+      input,
+    }),
   });
 
   let delivered = 0;
@@ -105,17 +125,16 @@ function pushInboundToPlugin(appId: string, fromUserId: string, text: string): {
     if (client.appId !== appId) continue;
     if (client.ws.readyState !== WebSocket.OPEN) continue;
 
-    client.ws.send(
-      JSON.stringify({
-        type: "message",
-        payload: {
-          messageId: message.id,
-          fromUserId,
-          text,
-          timestamp: message.timestamp,
-        },
+    client.ws.send(JSON.stringify({
+      type: "message",
+      payload: buildSimInboundPayload({
+        messageId: message.id,
+        fromUserId,
+        text,
+        timestamp: message.timestamp,
+        input,
       }),
-    );
+    }));
 
     client.inboundCount += 1;
     delivered += 1;
@@ -325,7 +344,16 @@ function renderPageHtml(): string {
           <div class="row"><input id="inboundAppId" placeholder="app_id" value="${escapeHtmlAttr(initialAppId)}" /></div>
           <div class="row"><input id="inboundFrom" placeholder="from_user_id" value="123456789" /></div>
           <div class="row"><textarea id="inboundText" placeholder="message text"></textarea></div>
-          <div class="row"><button id="sendInboundBtn">Send</button></div>
+          <div class="row"><input id="inboundImagesInput" type="file" accept="image/*" multiple /></div>
+          <div class="row"><input id="inboundFilesInput" type="file" multiple /></div>
+          <div class="hint">Selected Attachments</div>
+          <pre id="inboundSelectionOutput">No attachments selected.</pre>
+          <div class="hint">Payload Preview</div>
+          <pre id="inboundPayloadPreview">Waiting...</pre>
+          <div class="row">
+            <button id="clearInboundBtn" type="button">Clear</button>
+            <button id="sendInboundBtn" type="button">Send</button>
+          </div>
         </section>
 
         <section class="card">
@@ -360,9 +388,150 @@ function renderPageHtml(): string {
       const inboundAppId = document.getElementById("inboundAppId");
       const inboundFrom = document.getElementById("inboundFrom");
       const inboundText = document.getElementById("inboundText");
+      const inboundImagesInput = document.getElementById("inboundImagesInput");
+      const inboundFilesInput = document.getElementById("inboundFilesInput");
+      const inboundSelectionOutput = document.getElementById("inboundSelectionOutput");
+      const inboundPayloadPreview = document.getElementById("inboundPayloadPreview");
+      const sendInboundBtn = document.getElementById("sendInboundBtn");
+      const clearInboundBtn = document.getElementById("clearInboundBtn");
+
+      let selectedImageAttachments = [];
+      let selectedFileAttachments = [];
 
       function fmt(obj) {
         return JSON.stringify(obj, null, 2);
+      }
+
+      function readFileAsDataUrl(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || ""));
+          reader.onerror = () => reject(reader.error || new Error("Failed to read file"));
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function toBase64Payload(dataUrl) {
+        const parts = String(dataUrl || "").split(",", 2);
+        return parts.length === 2 ? parts[1] : "";
+      }
+
+      async function fileListToAttachments(fileList, kind) {
+        const files = Array.from(fileList || []);
+        return await Promise.all(
+          files.map(async (file) => ({
+            kind,
+            filename: file.name,
+            mimeType: String(file.type || (kind === "image" ? "image/png" : "application/octet-stream")),
+            dataBase64: toBase64Payload(await readFileAsDataUrl(file)),
+            size: file.size,
+          })),
+        );
+      }
+
+      function buildComposerInput(text, attachments) {
+        const content = [];
+        const trimmedText = String(text || "").trim();
+
+        if (trimmedText) {
+          content.push({
+            type: "input_text",
+            text: trimmedText,
+          });
+        }
+
+        for (const attachment of attachments) {
+          content.push({
+            type: attachment.kind === "image" ? "input_image" : "input_file",
+            filename: attachment.filename,
+            source: {
+              type: "base64",
+              media_type: attachment.mimeType,
+              data: attachment.dataBase64,
+            },
+          });
+        }
+
+        if (content.length === 0) {
+          return undefined;
+        }
+
+        return [
+          {
+            type: "message",
+            role: "user",
+            content,
+          },
+        ];
+      }
+
+      function buildInboundRequestBody() {
+        const attachments = [...selectedImageAttachments, ...selectedFileAttachments];
+        const text = String(inboundText.value || "").trim();
+        const input = buildComposerInput(text, attachments);
+
+        if (!text && !attachments.length) {
+          return null;
+        }
+
+        return {
+          app_id: inboundAppId.value.trim(),
+          from_user_id: inboundFrom.value.trim(),
+          text,
+          ...(input ? { input } : {}),
+        };
+      }
+
+      function buildInboundPayloadPreview() {
+        const requestBody = buildInboundRequestBody();
+        if (!requestBody) {
+          return null;
+        }
+
+        return {
+          type: "message",
+          payload: {
+            messageId: "<generated on send>",
+            fromUserId: requestBody.from_user_id,
+            text: requestBody.text,
+            timestamp: "<generated on send>",
+            ...(requestBody.input ? { input: requestBody.input } : {}),
+          },
+        };
+      }
+
+      function renderAttachmentSummary() {
+        const attachments = [...selectedImageAttachments, ...selectedFileAttachments];
+        if (attachments.length === 0) {
+          inboundSelectionOutput.textContent = "No attachments selected.";
+          return;
+        }
+
+        inboundSelectionOutput.textContent = attachments
+          .map((attachment) =>
+            [
+              attachment.kind.toUpperCase(),
+              attachment.filename,
+              attachment.mimeType,
+              attachment.size + " bytes",
+            ].join(" | "))
+          .join("\\n");
+      }
+
+      function refreshInboundPreview() {
+        renderAttachmentSummary();
+        const preview = buildInboundPayloadPreview();
+        inboundPayloadPreview.textContent = preview ? fmt(preview) : "Waiting...";
+        sendInboundBtn.disabled = !preview;
+      }
+
+      function resetInboundComposer() {
+        inboundText.value = "";
+        inboundImagesInput.value = "";
+        inboundFilesInput.value = "";
+        selectedImageAttachments = [];
+        selectedFileAttachments = [];
+        refreshInboundPreview();
       }
 
       function getEndpoints() {
@@ -459,6 +628,31 @@ function renderPageHtml(): string {
         }
       }
 
+      inboundText.addEventListener("input", refreshInboundPreview);
+      inboundFrom.addEventListener("input", refreshInboundPreview);
+
+      inboundImagesInput.addEventListener("change", async () => {
+        try {
+          selectedImageAttachments = await fileListToAttachments(inboundImagesInput.files, "image");
+          refreshInboundPreview();
+        } catch (err) {
+          addLogLine({ level: "error", message: String(err), timestamp: Date.now() });
+        }
+      });
+
+      inboundFilesInput.addEventListener("change", async () => {
+        try {
+          selectedFileAttachments = await fileListToAttachments(inboundFilesInput.files, "file");
+          refreshInboundPreview();
+        } catch (err) {
+          addLogLine({ level: "error", message: String(err), timestamp: Date.now() });
+        }
+      });
+
+      clearInboundBtn.addEventListener("click", () => {
+        resetInboundComposer();
+      });
+
       document.getElementById("genCredentialsBtn").addEventListener("click", async () => {
         try {
           const data = await api("/api/auth/credentials", { method: "POST", body: "{}" });
@@ -488,17 +682,18 @@ function renderPageHtml(): string {
         }
       });
 
-      document.getElementById("sendInboundBtn").addEventListener("click", async () => {
+      sendInboundBtn.addEventListener("click", async () => {
         try {
+          const requestBody = buildInboundRequestBody();
+          if (!requestBody) {
+            addLogLine({ level: "warn", message: "text or attachments required", timestamp: Date.now() });
+            return;
+          }
           await api("/api/messages/send", {
             method: "POST",
-            body: JSON.stringify({
-              app_id: inboundAppId.value.trim(),
-              from_user_id: inboundFrom.value.trim(),
-              text: inboundText.value,
-            }),
+            body: JSON.stringify(requestBody),
           });
-          inboundText.value = "";
+          resetInboundComposer();
           await refreshState();
           await refreshMessages();
         } catch (err) {
@@ -508,6 +703,7 @@ function renderPageHtml(): string {
 
       async function initialLoad() {
         hydrateEndpoints();
+        refreshInboundPreview();
         await Promise.all([refreshState(), refreshMessages(), refreshLogs()]);
       }
 
@@ -634,13 +830,19 @@ const httpServer = http.createServer(async (req, res) => {
       const appId = String(body.app_id ?? "").trim();
       const fromUserId = String(body.from_user_id ?? "").trim() || "123456789";
       const text = String(body.text ?? "").trim();
+      const input = Array.isArray(body.input) ? body.input as WeiboResponseMessageInputItem[] : undefined;
 
-      if (!appId || !text) {
-        sendJson(res, 400, { code: 4003, message: "app_id and text are required" });
+      if (!appId || (!text && !input?.length)) {
+        sendJson(res, 400, { code: 4003, message: "app_id and either text or input are required" });
         return;
       }
 
-      const result = pushInboundToPlugin(appId, fromUserId, text);
+      const result = pushInboundToPlugin({
+        appId,
+        fromUserId,
+        text,
+        input,
+      });
       sendJson(res, 200, {
         code: 0,
         message: "success",
@@ -880,6 +1082,10 @@ wsServer.on("connection", (ws, request) => {
 httpServer.listen(HTTP_PORT, "0.0.0.0", () => {
   log("info", "http server started", {
     url: `http://0.0.0.0:${HTTP_PORT}`,
+    ui: getSimUiUrl({
+      host: "127.0.0.1",
+      httpPort: HTTP_PORT,
+    }),
     endpoints: {
       credentials: "POST /api/auth/credentials",
       token: "POST /open/auth/ws_token",
@@ -892,6 +1098,12 @@ httpServer.listen(HTTP_PORT, "0.0.0.0", () => {
   log("info", "default credential ready", {
     appId: DEFAULT_APP_ID,
     appSecret: DEFAULT_APP_SECRET,
+  });
+  log("info", "ui ready", {
+    url: getSimUiUrl({
+      host: "127.0.0.1",
+      httpPort: HTTP_PORT,
+    }),
   });
 });
 

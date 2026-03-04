@@ -1,3 +1,5 @@
+import type { WeiboResponseContentPart, WeiboResponseMessageInputItem } from "./types.js";
+
 type SimStateLike = {
   credentials?: Array<{
     appId?: unknown;
@@ -14,6 +16,21 @@ export type LatestCredential = {
 export type SimPageEndpoints = {
   tokenUrl: string;
   wsUrl: string;
+};
+
+export type SimInboundPayload = {
+  messageId: string;
+  fromUserId: string;
+  text: string;
+  timestamp: number;
+  input?: WeiboResponseMessageInputItem[];
+};
+
+export type SimComposerAttachment = {
+  kind: "image" | "file";
+  filename: string;
+  mimeType: string;
+  dataBase64: string;
 };
 
 export function getLatestCredentialFromState(state: SimStateLike): LatestCredential | null {
@@ -54,5 +71,70 @@ export function getSimPageEndpoints({
   return {
     tokenUrl,
     wsUrl,
+  };
+}
+
+export function getSimUiUrl({
+  host,
+  httpPort,
+}: {
+  host: string;
+  httpPort: number;
+}): string {
+  return `http://${host}:${httpPort}/`;
+}
+
+export function buildSimInputItems(params: {
+  text: string;
+  attachments?: SimComposerAttachment[];
+}): WeiboResponseMessageInputItem[] | undefined {
+  const content: WeiboResponseContentPart[] = [];
+  const text = params.text.trim();
+
+  if (text) {
+    content.push({
+      type: "input_text",
+      text,
+    });
+  }
+
+  for (const attachment of params.attachments ?? []) {
+    content.push({
+      type: attachment.kind === "image" ? "input_image" : "input_file",
+      filename: attachment.filename,
+      source: {
+        type: "base64",
+        media_type: attachment.mimeType,
+        data: attachment.dataBase64,
+      },
+    });
+  }
+
+  if (content.length === 0) {
+    return undefined;
+  }
+
+  return [
+    {
+      type: "message",
+      role: "user",
+      content,
+    },
+  ];
+}
+
+export function buildSimInboundPayload(params: {
+  messageId: string;
+  fromUserId: string;
+  text: string;
+  timestamp: number;
+  input?: WeiboResponseMessageInputItem[];
+}): SimInboundPayload {
+  return {
+    messageId: params.messageId,
+    fromUserId: params.fromUserId,
+    text: params.text,
+    timestamp: params.timestamp,
+    ...(params.input?.length ? { input: params.input } : {}),
   };
 }

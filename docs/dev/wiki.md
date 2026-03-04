@@ -129,8 +129,9 @@ ws://open-im.api.weibo.com/ws/stream?app_id=<APP_ID>&token=<TOKEN>
 | `type` | `"message"` | 是 | 消息类型 |
 | `payload.messageId` | `string` | 是 | 消息唯一标识，插件用它做去重 |
 | `payload.fromUserId` | `string` | 是 | 发送方微博用户 ID |
-| `payload.text` | `string` | 是 | 文本内容 |
+| `payload.text` | `string` | 否 | 旧版纯文本字段，仍兼容 |
 | `payload.timestamp` | `number` | 否 | 毫秒时间戳 |
+| `payload.input` | `array` | 否 | 新版 Responses-style 输入数组 |
 
 示例：
 
@@ -150,7 +151,151 @@ ws://open-im.api.weibo.com/ws/stream?app_id=<APP_ID>&token=<TOKEN>
 
 - 只处理 `type === "message"` 且存在 `payload` 的事件
 - 按 `messageId` 做内存去重
-- `text` 为空白时直接丢弃
+- 如果 `payload.messageId` 为空字符串，会基于 `fromUserId + text + timestamp + input` 计算一个稳定回退 ID
+- 文本解析优先读取 `payload.input` 里的 `role = "user"` message item
+- 如果 `payload.input` 里没有文本 part，则回退到 `payload.text`
+- 如果最终既没有文本也没有可持久化附件，则直接丢弃
+- 纯图片 / 纯文件消息是允许的；这类消息会以空文本 + 媒体上下文的方式继续传给 Claw
+
+推荐的新请求形态如下：
+
+```json
+{
+  "type": "message",
+  "payload": {
+    "messageId": "msg_in_1741080000000",
+    "fromUserId": "123456789",
+    "text": "帮我看看这两份附件",
+    "timestamp": 1741080000000,
+    "input": [
+      {
+        "type": "message",
+        "role": "user",
+        "content": [
+          {
+            "type": "input_text",
+            "text": "帮我看看这两份附件"
+          },
+          {
+            "type": "input_image",
+            "filename": "image.png",
+            "source": {
+              "type": "base64",
+              "media_type": "image/png",
+              "data": "<base64>"
+            }
+          },
+          {
+            "type": "input_file",
+            "filename": "doc.txt",
+            "source": {
+              "type": "base64",
+              "media_type": "text/plain",
+              "data": "<base64>"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+兼容性建议：
+
+- 新接入方应优先构造 `payload.input`
+- `payload.text` 建议保留为纯文本镜像，便于旧逻辑回退和日志预览
+- 如果只发 `payload.text`，当前插件仍兼容
+
+### 4.1.1 `payload.input` 的设计语言
+
+插件当前只在 `message` 的 `payload.input` 中实现了 Responses-style 输入语言的一个子集。
+
+当前支持的输入 item：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `item.type` | `"message"` | 当前只处理 message item |
+| `item.role` | `"user"` | 当前只消费 user role |
+| `item.content[]` | `array` | 内容 part 列表 |
+
+当前支持的内容 part：
+
+| `content[].type` | 当前行为 |
+| --- | --- |
+| `input_text` | 作为正文文本输入 |
+| `input_image` | 作为图片附件输入 |
+| `input_file` | 作为文件附件输入 |
+
+当前接受但不生效的输入语言：
+
+| 类型 | 当前行为 |
+| --- | --- |
+| `message` with role `system` / `developer` / `assistant` | 忽略 |
+| 未知 content part | 忽略 |
+
+### 4.1.2 `input_text`
+
+结构：
+
+```json
+{
+  "type": "input_text",
+  "text": "帮我看看这张图"
+}
+```
+
+当前插件行为：
+
+- 只要 part 出现在 `role = "user"` 的 message item 中，就会参与正文拼接
+- 多个 `input_text` part 之间会用换行符拼接
+
+### 4.1.3 `input_image`
+
+结构：
+
+```json
+{
+  "type": "input_image",
+  "filename": "image.png",
+  "source": {
+    "type": "base64",
+    "media_type": "image/png",
+    "data": "<base64>"
+  }
+}
+```
+
+当前插件行为：
+
+- 当前只支持 `source.type = "base64"`
+- 解码后通过 OpenClaw 的 `saveMediaBuffer(...)` 落为 inbound 媒体文件
+- 再通过 `buildAgentMediaPayload(...)` 写入 `MediaPath`、`MediaPaths`、`MediaType`、`MediaTypes`、`MediaUrl`、`MediaUrls`
+- 仅允许这些图片 MIME：`image/jpeg`、`image/png`、`image/gif`、`image/webp`
+- 图片大小上限由当前插件常量控制，为 `10MB`
+
+### 4.1.4 `input_file`
+
+结构：
+
+```json
+{
+  "type": "input_file",
+  "filename": "doc.txt",
+  "source": {
+    "type": "base64",
+    "media_type": "text/plain",
+    "data": "<base64>"
+  }
+}
+```
+
+当前插件行为：
+
+- 当前只支持 `source.type = "base64"`
+- 解码后同样通过 `saveMediaBuffer(...)` 落为 inbound 文件
+- 再通过 `buildAgentMediaPayload(...)` 暴露给 Claw
+- 文件大小上限由当前插件常量控制，为 `5MB`
 
 ### 4.2 `system`
 
@@ -413,7 +558,7 @@ ws://open-im.api.weibo.com/ws/stream?app_id=<APP_ID>&token=<TOKEN>
 
 1. `POST /open/auth/ws_token`
 2. `ws://.../ws/stream?app_id=...&token=...`
-3. 下行 `message`
+3. 下行 `message`，其中推荐使用 `payload.input`
 4. 服务端需要响应客户端的应用层 `ping`，使客户端能收到可识别的 pong
 5. 接收上行 `send_message`
 
@@ -450,7 +595,57 @@ npm run sim:server
 | `GET` | `/api/ws/frames` | 同上，兼容别名 |
 | `GET` | `/api/state` | 查看连接、token、计数状态 |
 
-### 9.3 关键实现位置
+### 9.3 `POST /api/messages/send` 请求体
+
+本地模拟器会把这个 HTTP 请求转换成一条下行 WebSocket `message` 事件发给已连接插件。
+
+请求体字段：
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `app_id` | `string` | 是 | 目标应用 ID |
+| `from_user_id` | `string` | 否 | 模拟发送方用户 ID；默认 `123456789` |
+| `text` | `string` | 否 | 兼容旧版纯文本字段 |
+| `input` | `array` | 否 | 新版 Responses-style 输入 |
+
+约束：
+
+- `app_id` 必填
+- `text` 和 `input` 至少要有一个
+- 只传附件时，`text` 可以为空字符串
+
+示例：
+
+```json
+{
+  "app_id": "weibo_test_app",
+  "from_user_id": "123456789",
+  "text": "请看附件",
+  "input": [
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "请看附件"
+        },
+        {
+          "type": "input_image",
+          "filename": "image.png",
+          "source": {
+            "type": "base64",
+            "media_type": "image/png",
+            "data": "<base64>"
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+### 9.4 关键实现位置
 
 如果要追代码，优先看这些文件：
 

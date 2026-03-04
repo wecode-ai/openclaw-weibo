@@ -8,7 +8,8 @@
     "ci:check": "npx tsc --noEmit && npm run test:unit",
     "build": "tsc",
     "dev": "tsx",
-    "sim:server": "tsx weibo-server.ts"
+    "sim:server": "tsx weibo-server.ts",
+    "sync:gitee": "tsx scripts/sync-github-main-to-gitee.ts"
   },
   "license": "MIT",
   "files": [
