@@ -1,5 +1,5 @@
 {
-  "name": "@yourname/openclaw-weibo",
+  "name": "@yourname/weibo",
   "version": "0.1.0",
   "type": "module",
   "description": "OpenClaw Weibo DM channel plugin",
@@ -8,8 +8,7 @@
     "ci:check": "npx tsc --noEmit && npm run test:unit",
     "build": "tsc",
     "dev": "tsx",
-    "sim:server": "tsx weibo-server.ts",
-    "sync:gitee": "tsx scripts/sync-github-main-to-gitee.ts"
+    "sim:server": "tsx weibo-server.ts"
   },
   "license": "MIT",
   "files": [
@@ -23,7 +22,7 @@
       "./index.ts"
     ],
     "channel": {
-      "id": "openclaw-weibo",
+      "id": "weibo",
       "label": "Weibo",
       "selectionLabel": "Weibo (微博)",
       "docsPath": "/channels/weibo",
