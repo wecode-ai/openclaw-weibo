@@ -1,6 +1,7 @@
 import http, { type IncomingMessage, type ServerResponse } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { createSimStore, type SimLogLevel, type SimMessageRecord } from "./src/sim-store.js";
+import { getLatestCredentialFromState } from "./src/sim-page.js";
 
 const HTTP_PORT = 9810;
 const WS_PORT = 9999;
@@ -173,7 +174,35 @@ function listReceivedMessages(limit: number): SimMessageRecord[] {
     .sort((a, b) => b.timestamp - a.timestamp);
 }
 
+function escapeHtmlAttr(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("\"", "&quot;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
 function renderPageHtml(): string {
+  const latestCredential = getLatestCredentialFromState({
+    credentials: store.listCredentials(),
+  });
+  const initialAppId = latestCredential?.appId ?? "";
+  const initialAppSecret = latestCredential?.appSecret ?? "";
+  const initialCredentialDisplay = latestCredential
+    ? JSON.stringify(
+      {
+        code: 0,
+        message: "latest",
+        data: {
+          app_id: initialAppId,
+          app_secret: initialAppSecret,
+        },
+      },
+      null,
+      2,
+    )
+    : "Waiting...";
+
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -270,20 +299,20 @@ function renderPageHtml(): string {
         <section class="card">
           <h2>Credentials</h2>
           <div class="row"><button id="genCredentialsBtn">Generate appId / appSecret</button></div>
-          <pre id="credentialOutput">Waiting...</pre>
+          <pre id="credentialOutput">${escapeHtmlAttr(initialCredentialDisplay)}</pre>
         </section>
 
         <section class="card">
           <h2>Token</h2>
-          <div class="row"><input id="tokenAppId" placeholder="app_id" /></div>
-          <div class="row"><input id="tokenAppSecret" placeholder="app_secret" /></div>
+          <div class="row"><input id="tokenAppId" placeholder="app_id" value="${escapeHtmlAttr(initialAppId)}" /></div>
+          <div class="row"><input id="tokenAppSecret" placeholder="app_secret" value="${escapeHtmlAttr(initialAppSecret)}" /></div>
           <div class="row"><button id="genTokenBtn">Generate token</button></div>
           <pre id="tokenOutput">Waiting...</pre>
         </section>
 
         <section class="card">
           <h2>Send Message To Plugin (Inbound)</h2>
-          <div class="row"><input id="inboundAppId" placeholder="app_id" /></div>
+          <div class="row"><input id="inboundAppId" placeholder="app_id" value="${escapeHtmlAttr(initialAppId)}" /></div>
           <div class="row"><input id="inboundFrom" placeholder="from_user_id" value="123456789" /></div>
           <div class="row"><textarea id="inboundText" placeholder="message text"></textarea></div>
           <div class="row"><button id="sendInboundBtn">Send</button></div>
@@ -353,9 +382,40 @@ function renderPageHtml(): string {
         return data;
       }
 
+      function hydrateCredentialFromState(state) {
+        const credentials = Array.isArray(state?.credentials) ? state.credentials : [];
+        if (credentials.length === 0) {
+          return;
+        }
+
+        const latest = credentials
+          .slice()
+          .sort((a, b) => Number(b?.createdAt || 0) - Number(a?.createdAt || 0))[0];
+
+        const appId = String(latest?.appId || "").trim();
+        const appSecret = String(latest?.appSecret || "").trim();
+
+        if (!appId || !appSecret) {
+          return;
+        }
+
+        tokenAppId.value = appId;
+        tokenAppSecret.value = appSecret;
+        inboundAppId.value = appId;
+        credentialOutput.textContent = fmt({
+          code: 0,
+          message: "latest",
+          data: {
+            app_id: appId,
+            app_secret: appSecret,
+          },
+        });
+      }
+
       async function refreshState() {
         const data = await api("/api/state");
         stateOutput.textContent = fmt(data);
+        hydrateCredentialFromState(data);
       }
 
       async function refreshMessages() {
