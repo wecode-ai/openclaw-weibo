@@ -101,7 +101,8 @@ export async function handleWeiboMessage(params: HandleWeiboMessageParams): Prom
   const textChunkLimit = core.channel.text.resolveTextChunkLimit(cfg, "weibo", accountId, {
     fallbackLimit: account.config.textChunkLimit ?? 4000,
   });
-  const chunkMode = core.channel.text.resolveChunkMode(cfg, "weibo", accountId);
+  const chunkMode = account.config.chunkMode
+    ?? core.channel.text.resolveChunkMode(cfg, "weibo", accountId);
 
   // Build final inbound context
   const ctxPayload = core.channel.reply.finalizeInboundContext({
@@ -132,14 +133,19 @@ export async function handleWeiboMessage(params: HandleWeiboMessageParams): Prom
   const { dispatcher, replyOptions, markDispatchIdle } = core.channel.reply.createReplyDispatcherWithTyping({
     deliver: async (reply) => {
       if (reply.text) {
-        const { sendMessageWeibo } = await import("./send.js");
+        const { sendMessageWeibo, generateWeiboMessageId } = await import("./send.js");
+        const outboundMessageId = generateWeiboMessageId();
         // Chunk text if needed
+        let chunkId = 0;
         for (const chunk of core.channel.text.chunkTextWithMode(reply.text, textChunkLimit, chunkMode)) {
           await sendMessageWeibo({
             cfg,
             to: fromUserId,
             text: chunk,
+            messageId: outboundMessageId,
+            chunkId,
           });
+          chunkId += 1;
         }
       }
     },

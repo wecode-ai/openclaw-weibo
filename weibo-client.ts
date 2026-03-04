@@ -75,6 +75,8 @@ async function main() {
         payload: {
           toUserId: "123456789",
           text: "Hello from test client! 这是一条测试消息。",
+          messageId: `msg_${Date.now()}`,
+          chunkId: 0,
         },
       });
     },

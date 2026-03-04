@@ -1,0 +1,1 @@
+{"content":[{"text":"Invalid model ID. Only Claude, Thudm and Moonshot models are supported.","type":"text"}],"id":"msg_bdrk_012CzCVTprjSXDhqqsVA2wgK","model":"","role":"assistant","stop_reason":"end_turn","stop_sequence":null,"type":"message","usage":{"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"input_tokens":0,"output_tokens":0}}

@@ -26,4 +26,5 @@ export type WeiboMessageContext = {
 export type WeiboSendResult = {
   messageId: string;
   chatId: string;
+  chunkId: number;
 };

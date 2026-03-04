@@ -37,6 +37,8 @@ async function main() {
         payload: {
           toUserId: "123456789",
           text: "Hello from test client!",
+          messageId: `msg_${Date.now()}`,
+          chunkId: 0,
         },
       });
     },
