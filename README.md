@@ -20,7 +20,7 @@ OpenClaw Weibo DM channel plugin - 微博私信通道插件
 ### 配置OpenClaw 
 #### 安装插件
 ```
-git clone https://github.com/wecode-ai/openclaw-weibo.git
+git clone https://gitee.com/wecode-ai/openclaw-weibo.git
 cd openclaw-weibo && openclaw plugins install . && openclaw gateway restart
 ```
 
