@@ -46,6 +46,7 @@ describe("sendMessageWeibo", () => {
       accountId: "default",
       messageId: "msg_group_1",
       chunkId: 2,
+      done: false,
     });
 
     expect(sendMock).toHaveBeenCalledWith({
@@ -55,11 +56,12 @@ describe("sendMessageWeibo", () => {
         text: "Reply",
         messageId: "msg_group_1",
         chunkId: 2,
+        done: false,
       },
     });
   });
 
-  it("defaults chunkId to 0 and returns same generated messageId", async () => {
+  it("defaults chunkId to 0, done=true and returns same generated messageId", async () => {
     const result = await sendMessageWeibo({
       cfg: {} as ClawdbotConfig,
       to: "123456",
@@ -68,12 +70,14 @@ describe("sendMessageWeibo", () => {
     });
 
     const sent = sendMock.mock.calls[0]?.[0] as {
-      payload?: { messageId?: string; chunkId?: number };
+      payload?: { messageId?: string; chunkId?: number; done?: boolean };
     };
 
     expect(sent.payload?.messageId).toMatch(/^msg_/);
     expect(sent.payload?.chunkId).toBe(0);
+    expect(sent.payload?.done).toBe(true);
     expect(result.messageId).toBe(sent.payload?.messageId);
     expect(result.chunkId).toBe(0);
+    expect(result.done).toBe(true);
   });
 });

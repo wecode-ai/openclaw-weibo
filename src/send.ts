@@ -11,6 +11,7 @@ export type SendWeiboMessageParams = {
   accountId?: string;
   messageId?: string;
   chunkId?: number;
+  done?: boolean;
 };
 
 export function generateWeiboMessageId(): string {
@@ -25,7 +26,8 @@ function normalizeChunkId(chunkId?: number): number {
 }
 
 export async function sendMessageWeibo(params: SendWeiboMessageParams): Promise<WeiboSendResult> {
-  const { cfg, to, text, accountId, messageId, chunkId } = params;
+  const { cfg, to, text, accountId, messageId, chunkId, done } = params;
+  const streamDebugEnabled = process.env.WEIBO_STREAM_DEBUG === "1";
   const account = resolveWeiboAccount({ cfg, accountId });
 
   if (!account.configured) {
@@ -44,6 +46,7 @@ export async function sendMessageWeibo(params: SendWeiboMessageParams): Promise<
     ? messageId.trim()
     : generateWeiboMessageId();
   const outboundChunkId = normalizeChunkId(chunkId);
+  const outboundDone = typeof done === "boolean" ? done : true;
 
   client.send({
     type: "send_message",
@@ -52,12 +55,26 @@ export async function sendMessageWeibo(params: SendWeiboMessageParams): Promise<
       text: text ?? "",
       messageId: outboundMessageId,
       chunkId: outboundChunkId,
+      done: outboundDone,
     },
   });
+  if (streamDebugEnabled) {
+    console.log(
+      `[weibo][stream-debug] ws_send ${JSON.stringify({
+        toUserId: userId,
+        messageId: outboundMessageId,
+        chunkId: outboundChunkId,
+        done: outboundDone,
+        textLen: (text ?? "").length,
+        preview: (text ?? "").slice(0, 80),
+      })}`,
+    );
+  }
 
   return {
     messageId: outboundMessageId,
     chatId: receiveId,
     chunkId: outboundChunkId,
+    done: outboundDone,
   };
 }

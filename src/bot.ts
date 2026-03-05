@@ -7,6 +7,7 @@ import type {
   WeiboResponseMessageInputItem,
 } from "./types.js";
 import { resolveWeiboAccount } from "./accounts.js";
+import { createWeiboOutboundStream } from "./outbound-stream.js";
 import { getWeiboRuntime } from "./runtime.js";
 
 // Simple in-memory dedup
@@ -211,6 +212,15 @@ export async function handleWeiboMessage(params: HandleWeiboMessageParams): Prom
   if (isDuplicate(messageId)) {
     return null;
   }
+  const inboundAcceptedAt = Date.now();
+  const streamDebugEnabled = process.env.WEIBO_STREAM_DEBUG === "1";
+  const streamDebug = (tag: string, data?: Record<string, unknown>): void => {
+    if (!streamDebugEnabled) {
+      return;
+    }
+    const payload = data ? ` ${JSON.stringify(data)}` : "";
+    log(`weibo[${accountId}][stream-debug] ${tag}${payload}`);
+  };
 
   // Get runtime core
   const core = getWeiboRuntime();
@@ -273,6 +283,69 @@ export async function handleWeiboMessage(params: HandleWeiboMessageParams): Prom
   });
   const chunkMode = account.config.chunkMode
     ?? core.channel.text.resolveChunkMode(cfg, "weibo", accountId);
+  // Weibo real-time streaming is driven by onPartialReply; disable block streaming to avoid duplicate lanes.
+  const disableBlockStreaming = true;
+  streamDebug("dispatch_init", {
+    inboundMessageId: messageId,
+    fromUserId,
+    chunkMode,
+    textChunkLimit,
+    configuredBlockStreaming: account.config.blockStreaming,
+    disableBlockStreaming,
+  });
+  let currentOutboundMessageId: string | null = null;
+  let currentOutboundChunkId = 0;
+  let hasLoggedFirstChunkLatency = false;
+
+  const ensureOutboundMessageId = async (): Promise<string> => {
+    if (currentOutboundMessageId) {
+      return currentOutboundMessageId;
+    }
+    const { generateWeiboMessageId } = await import("./send.js");
+    currentOutboundMessageId = generateWeiboMessageId();
+    currentOutboundChunkId = 0;
+    return currentOutboundMessageId;
+  };
+
+  const sendOutboundChunk = async (params: {
+    text: string;
+    done: boolean;
+    source: "partial" | "deliver" | "settled";
+  }): Promise<void> => {
+    const { sendMessageWeibo } = await import("./send.js");
+    const outboundMessageId = await ensureOutboundMessageId();
+    streamDebug("send_chunk", {
+      source: params.source,
+      messageId: outboundMessageId,
+      chunkId: currentOutboundChunkId,
+      done: params.done,
+      textLen: params.text.length,
+      preview: params.text.slice(0, 80),
+    });
+    await sendMessageWeibo({
+      cfg,
+      to: fromUserId,
+      text: params.text,
+      messageId: outboundMessageId,
+      chunkId: currentOutboundChunkId,
+      done: params.done,
+    });
+    if (!hasLoggedFirstChunkLatency && params.text.length > 0) {
+      const elapsedMs = Math.max(0, Date.now() - inboundAcceptedAt);
+      log(`weibo[${accountId}]: first chunk first-char latency=${elapsedMs}ms`);
+      hasLoggedFirstChunkLatency = true;
+    }
+    currentOutboundChunkId += 1;
+  };
+
+  const outboundStream = createWeiboOutboundStream({
+    chunkMode,
+    textChunkLimit,
+    emit: sendOutboundChunk,
+    chunkTextWithMode: (text, limit, mode) =>
+      core.channel.text.chunkTextWithMode(text, limit, mode),
+    streamDebug,
+  });
 
   // Build final inbound context
   const ctxPayload = core.channel.reply.finalizeInboundContext({
@@ -302,23 +375,24 @@ export async function handleWeiboMessage(params: HandleWeiboMessageParams): Prom
 
   // Create a dispatcher that sends replies back to Weibo
   const { dispatcher, replyOptions, markDispatchIdle } = core.channel.reply.createReplyDispatcherWithTyping({
-    deliver: async (reply) => {
-      if (reply.text) {
-        const { sendMessageWeibo, generateWeiboMessageId } = await import("./send.js");
-        const outboundMessageId = generateWeiboMessageId();
-        // Chunk text if needed
-        let chunkId = 0;
-        for (const chunk of core.channel.text.chunkTextWithMode(reply.text, textChunkLimit, chunkMode)) {
-          await sendMessageWeibo({
-            cfg,
-            to: fromUserId,
-            text: chunk,
-            messageId: outboundMessageId,
-            chunkId,
-          });
-          chunkId += 1;
-        }
-      }
+    deliver: async (reply, info?: { kind?: string }) => {
+      const isFinalDeliver = info?.kind !== "block";
+      const before = outboundStream.snapshot();
+      streamDebug("deliver_enter", {
+        kind: info?.kind ?? "unknown",
+        isFinalDeliver,
+        textLen: (reply.text ?? "").length,
+        ...before,
+      });
+      await outboundStream.pushDeliverText({
+        text: reply.text ?? "",
+        isFinal: isFinalDeliver,
+      });
+      streamDebug("deliver_exit", {
+        kind: info?.kind ?? "unknown",
+        isFinalDeliver,
+        ...outboundStream.snapshot(),
+      });
     },
     onError: (err, info) => {
       error(`weibo[${accountId}] ${info.kind} reply failed: ${String(err)}`);
@@ -332,19 +406,51 @@ export async function handleWeiboMessage(params: HandleWeiboMessageParams): Prom
   log(`weibo[${accountId}]: dispatching to agent (session=${route.sessionKey})`);
 
   try {
-    const result = await core.channel.reply.dispatchReplyFromConfig({
-      ctx: ctxPayload,
-      cfg,
+    const result = await core.channel.reply.withReplyDispatcher({
       dispatcher,
-      replyOptions,
+      onSettled: async () => {
+        streamDebug("dispatcher_settled_before", {
+          currentOutboundMessageId,
+          currentOutboundChunkId,
+          ...outboundStream.snapshot(),
+        });
+        await outboundStream.settle();
+        streamDebug("dispatcher_settled_after", {
+          currentOutboundMessageId,
+          currentOutboundChunkId,
+          ...outboundStream.snapshot(),
+        });
+        currentOutboundMessageId = null;
+        currentOutboundChunkId = 0;
+        markDispatchIdle();
+      },
+      run: () => core.channel.reply.dispatchReplyFromConfig({
+        ctx: ctxPayload,
+        cfg,
+        dispatcher,
+        replyOptions: {
+          ...replyOptions,
+          disableBlockStreaming,
+          onPartialReply: async (payload) => {
+            streamDebug("on_partial_reply", {
+              textLen: (payload.text ?? "").length,
+              preview: (payload.text ?? "").slice(0, 80),
+            });
+            await outboundStream.pushPartialSnapshot(payload.text ?? "");
+          },
+          onAssistantMessageStart: () => {
+            streamDebug("on_assistant_message_start");
+          },
+          onReasoningEnd: () => {
+            streamDebug("on_reasoning_end");
+          },
+        },
+      }),
     });
-
-    markDispatchIdle();
 
     log(`weibo[${accountId}]: dispatch complete (queuedFinal=${result.queuedFinal}, replies=${result.counts.final})`);
   } catch (err) {
     error(`weibo[${accountId}]: failed to dispatch message: ${String(err)}`);
-    markDispatchIdle();
   }
 
   // Build and return message context
