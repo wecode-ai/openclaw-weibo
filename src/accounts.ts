@@ -48,7 +48,7 @@ export function resolveWeiboAccount({
         tokenEndpoint: topLevelTokenEndpoint ?? DEFAULT_TOKEN_ENDPOINT,
         wsEndpoint: topLevelWsEndpoint ?? DEFAULT_WS_ENDPOINT,
         textChunkLimit: weiboCfg.textChunkLimit,
-        chunkMode: weiboCfg.chunkMode ?? "newline",
+        chunkMode: weiboCfg.chunkMode ?? "raw",
         blockStreaming: weiboCfg.blockStreaming ?? true,
       },
     };
@@ -81,7 +81,7 @@ export function resolveWeiboAccount({
     dmPolicy: accountCfg?.dmPolicy ?? topLevel.dmPolicy ?? "open",
     allowFrom: accountCfg?.allowFrom ?? topLevel.allowFrom ?? [],
     textChunkLimit: accountCfg?.textChunkLimit ?? topLevel.textChunkLimit,
-    chunkMode: accountCfg?.chunkMode ?? topLevel.chunkMode ?? "newline",
+    chunkMode: accountCfg?.chunkMode ?? topLevel.chunkMode ?? "raw",
     blockStreaming: accountCfg?.blockStreaming ?? topLevel.blockStreaming ?? true,
   };
 
