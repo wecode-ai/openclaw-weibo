@@ -1,5 +1,5 @@
 {
-  "name": "@yourname/weibo",
+  "name": "@openclaw-weibo/weibo",
   "version": "0.1.0",
   "type": "module",
   "description": "OpenClaw Weibo DM channel plugin",
