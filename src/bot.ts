@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { buildAgentMediaPayload, type ClawdbotConfig, type RuntimeEnv } from "openclaw/plugin-sdk";
+import type { ClawdbotConfig, RuntimeEnv } from "openclaw/plugin-sdk";
 import type {
   WeiboInboundAttachmentPart,
   WeiboMessageContext,
@@ -9,6 +9,7 @@ import type {
 import { resolveWeiboAccount } from "./accounts.js";
 import { createWeiboOutboundStream } from "./outbound-stream.js";
 import { getWeiboRuntime } from "./runtime.js";
+import { buildAgentMediaPayloadCompat } from "./plugin-sdk-compat.js";
 
 // Simple in-memory dedup
 const processedMessages = new Set<string>();
@@ -125,7 +126,7 @@ async function persistWeiboInboundAttachments(params: {
   normalized: NormalizedWeiboInboundInput;
   runtimeCore: ReturnType<typeof getWeiboRuntime>;
   error: (message: string, ...args: unknown[]) => void;
-}): Promise<ReturnType<typeof buildAgentMediaPayload>> {
+}): Promise<ReturnType<typeof buildAgentMediaPayloadCompat>> {
   const { normalized, runtimeCore, error } = params;
   const mediaList: Array<{ path: string; contentType?: string | null }> = [];
 
@@ -184,7 +185,7 @@ async function persistWeiboInboundAttachments(params: {
     }
   }
 
-  return buildAgentMediaPayload(mediaList);
+  return buildAgentMediaPayloadCompat(mediaList);
 }
 
 export type HandleWeiboMessageParams = {

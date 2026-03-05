@@ -1,9 +1,10 @@
-import { waitUntilAbort, type ClawdbotConfig, type RuntimeEnv } from "openclaw/plugin-sdk";
+import type { ClawdbotConfig, RuntimeEnv } from "openclaw/plugin-sdk";
 import type { ResolvedWeiboAccount, WeiboRuntimeStatusPatch } from "./types.js";
 import { resolveWeiboAccount, listEnabledWeiboAccounts } from "./accounts.js";
 import { clearClientCache, createWeiboClient, WeiboWebSocketClient } from "./client.js";
 import { clearTokenCache, formatWeiboTokenFetchErrorMessage } from "./token.js";
 import { handleWeiboMessage, type WeiboMessageEvent } from "./bot.js";
+import { waitUntilAbortCompat } from "./plugin-sdk-compat.js";
 
 export type MonitorWeiboOpts = {
   config?: ClawdbotConfig;
@@ -133,7 +134,7 @@ async function monitorSingleAccount(params: {
   // Keep the channel task alive until the gateway aborts it. Returning early here
   // causes the gateway supervisor to interpret startup as an exit and trigger
   // provider auto-restart loops.
-  await waitUntilAbort(abortSignal);
+  await waitUntilAbortCompat(abortSignal);
 }
 
 export async function monitorWeiboProvider(opts: MonitorWeiboOpts = {}): Promise<void> {
