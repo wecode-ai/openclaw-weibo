@@ -46,6 +46,9 @@ openclaw config set 'channels.weibo.appId' 'your-appId'
 }
 ```
 
+## 插件网络访问说明
+* 插件通过域名 `open-im.api.weibo.com` 来调用微博接口。
+* 如在出入口网络受限环境下使用该插件请注意配置访问权限。
 
 ## License
 

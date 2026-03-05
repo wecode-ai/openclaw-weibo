@@ -1,5 +1,5 @@
 {
-  "name": "@yourname/openclaw-weibo",
+  "name": "@wecode-ai-openclaw/weibo",
   "version": "0.1.0",
   "type": "module",
   "description": "OpenClaw Weibo DM channel plugin",
@@ -22,7 +22,7 @@
       "./index.ts"
     ],
     "channel": {
-      "id": "openclaw-weibo",
+      "id": "weibo",
       "label": "Weibo",
       "selectionLabel": "Weibo (微博)",
       "docsPath": "/channels/weibo",

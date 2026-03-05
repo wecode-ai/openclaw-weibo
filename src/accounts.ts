@@ -6,6 +6,9 @@ const DEFAULT_WS_ENDPOINT = "ws://open-im.api.weibo.com/ws/stream";
 const DEFAULT_TOKEN_ENDPOINT = "http://open-im.api.weibo.com/open/auth/ws_token";
 
 function readOptionalNonBlankString(value: unknown): string | undefined {
+  if (typeof value === "number" && !Number.isNaN(value)) {
+    return String(value);
+  }
   if (typeof value !== "string") {
     return undefined;
   }

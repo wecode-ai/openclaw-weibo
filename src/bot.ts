@@ -1,10 +1,24 @@
-import type { ClawdbotConfig, RuntimeEnv } from "openclaw/plugin-sdk";
-import type { WeiboMessageContext } from "./types.js";
+import { createHash } from "node:crypto";
+import { buildAgentMediaPayload, type ClawdbotConfig, type RuntimeEnv } from "openclaw/plugin-sdk";
+import type {
+  WeiboInboundAttachmentPart,
+  WeiboMessageContext,
+  WeiboResponseContentPart,
+  WeiboResponseMessageInputItem,
+} from "./types.js";
 import { resolveWeiboAccount } from "./accounts.js";
 import { getWeiboRuntime } from "./runtime.js";
 
 // Simple in-memory dedup
 const processedMessages = new Set<string>();
+const MAX_INBOUND_IMAGE_BYTES = 10 * 1024 * 1024;
+const MAX_INBOUND_FILE_BYTES = 5 * 1024 * 1024;
+const SUPPORTED_IMAGE_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+]);
 
 function isDuplicate(messageId: string): boolean {
   if (processedMessages.has(messageId)) {
@@ -19,15 +33,158 @@ function isDuplicate(messageId: string): boolean {
   return false;
 }
 
+function resolveInboundMessageId(event: WeiboMessageEvent): string {
+  const explicitMessageId = event.payload.messageId.trim();
+  if (explicitMessageId) {
+    return explicitMessageId;
+  }
+
+  const digest = createHash("sha1")
+    .update(JSON.stringify({
+      fromUserId: event.payload.fromUserId,
+      text: event.payload.text ?? "",
+      timestamp: event.payload.timestamp ?? null,
+      input: event.payload.input ?? [],
+    }))
+    .digest("hex")
+    .slice(0, 16);
+
+  return `weibo_inbound_${digest}`;
+}
+
 export type WeiboMessageEvent = {
   type: "message";
   payload: {
     messageId: string;
     fromUserId: string;
-    text: string;
+    text?: string;
     timestamp?: number;
+    input?: WeiboResponseMessageInputItem[];
   };
 };
+
+export type NormalizedWeiboInboundInput = {
+  text: string;
+  images: WeiboInboundAttachmentPart[];
+  files: WeiboInboundAttachmentPart[];
+};
+
+function isSupportedWeiboContentPart(part: unknown): part is WeiboResponseContentPart {
+  if (!part || typeof part !== "object") {
+    return false;
+  }
+
+  const type = (part as { type?: unknown }).type;
+  return type === "input_text" || type === "input_image" || type === "input_file";
+}
+
+export function normalizeWeiboInboundInput(event: WeiboMessageEvent): NormalizedWeiboInboundInput {
+  const textParts: string[] = [];
+  const images: WeiboInboundAttachmentPart[] = [];
+  const files: WeiboInboundAttachmentPart[] = [];
+
+  for (const item of event.payload.input ?? []) {
+    if (item.type !== "message" || item.role !== "user" || !Array.isArray(item.content)) {
+      continue;
+    }
+
+    for (const part of item.content) {
+      if (!isSupportedWeiboContentPart(part)) {
+        continue;
+      }
+
+      if (part.type === "input_text") {
+        if (typeof part.text === "string" && part.text) {
+          textParts.push(part.text);
+        }
+        continue;
+      }
+
+      const target = part.type === "input_image" ? images : files;
+      target.push({
+        mimeType: part.source.media_type,
+        filename: part.filename,
+        base64: part.source.data,
+      });
+    }
+  }
+
+  const normalizedText = textParts.length > 0
+    ? textParts.join("\n")
+    : (event.payload.text ?? "");
+
+  return {
+    text: normalizedText,
+    images,
+    files,
+  };
+}
+
+async function persistWeiboInboundAttachments(params: {
+  normalized: NormalizedWeiboInboundInput;
+  runtimeCore: ReturnType<typeof getWeiboRuntime>;
+  error: (message: string, ...args: unknown[]) => void;
+}): Promise<ReturnType<typeof buildAgentMediaPayload>> {
+  const { normalized, runtimeCore, error } = params;
+  const mediaList: Array<{ path: string; contentType?: string | null }> = [];
+
+  for (const image of normalized.images) {
+    if (!SUPPORTED_IMAGE_MIME_TYPES.has(image.mimeType)) {
+      error(`weibo: unsupported image mime type: ${image.mimeType}`);
+      continue;
+    }
+
+    try {
+      const buffer = Buffer.from(image.base64, "base64");
+      if (buffer.length === 0) {
+        error(`weibo: empty image payload: ${image.filename ?? "unknown"}`);
+        continue;
+      }
+
+      const saved = await runtimeCore.channel.media.saveMediaBuffer(
+        buffer,
+        image.mimeType,
+        "inbound",
+        MAX_INBOUND_IMAGE_BYTES,
+        image.filename,
+      );
+
+      mediaList.push({
+        path: saved.path,
+        contentType: saved.contentType,
+      });
+    } catch (err) {
+      error(`weibo: failed to persist image input: ${String(err)}`);
+    }
+  }
+
+  for (const file of normalized.files) {
+    try {
+      const buffer = Buffer.from(file.base64, "base64");
+      if (buffer.length === 0) {
+        error(`weibo: empty file payload: ${file.filename ?? "unknown"}`);
+        continue;
+      }
+
+      const saved = await runtimeCore.channel.media.saveMediaBuffer(
+        buffer,
+        file.mimeType,
+        "inbound",
+        MAX_INBOUND_FILE_BYTES,
+        file.filename,
+      );
+
+      mediaList.push({
+        path: saved.path,
+        contentType: saved.contentType,
+      });
+    } catch (err) {
+      error(`weibo: failed to persist file input: ${String(err)}`);
+    }
+  }
+
+  return buildAgentMediaPayload(mediaList);
+}
 
 export type HandleWeiboMessageParams = {
   cfg: ClawdbotConfig;
@@ -47,7 +204,8 @@ export async function handleWeiboMessage(params: HandleWeiboMessageParams): Prom
     return null;
   }
 
-  const { messageId, fromUserId, text, timestamp } = event.payload;
+  const { fromUserId, timestamp } = event.payload;
+  const messageId = resolveInboundMessageId(event);
 
   // Deduplication
   if (isDuplicate(messageId)) {
@@ -58,8 +216,20 @@ export async function handleWeiboMessage(params: HandleWeiboMessageParams): Prom
   const core = getWeiboRuntime();
 
   // Build message content
-  const content = text ?? "";
-  if (!content.trim()) {
+  const normalized = normalizeWeiboInboundInput(event);
+  const content = normalized.text;
+  const hasText = content.trim().length > 0;
+  const hasAttachments = normalized.images.length > 0 || normalized.files.length > 0;
+  if (!hasText && !hasAttachments) {
+    return null;
+  }
+  const mediaPayload = await persistWeiboInboundAttachments({
+    normalized,
+    runtimeCore: core,
+    error,
+  });
+  const hasPersistedMedia = Array.isArray(mediaPayload.MediaPaths) && mediaPayload.MediaPaths.length > 0;
+  if (!hasText && !hasPersistedMedia) {
     return null;
   }
 
@@ -127,6 +297,7 @@ export async function handleWeiboMessage(params: HandleWeiboMessageParams): Prom
     CommandAuthorized: true,
     OriginatingChannel: "weibo" as const,
     OriginatingTo: fromUserId,
+    ...mediaPayload,
   });
 
   // Create a dispatcher that sends replies back to Weibo

@@ -55,6 +55,20 @@ describe("resolveWeiboAccount", () => {
     expect(account.configured).toBe(false);
   });
 
+  it("treats numeric appId from config as string (config set stores numbers)", () => {
+    const cfg = {
+      channels: {
+        weibo: {
+          appId: 123456789 as unknown as string,
+          appSecret: "test-secret",
+        },
+      },
+    } as ClawdbotConfig;
+    const account = resolveWeiboAccount({ cfg, accountId: "default" });
+    expect(account.appId).toBe("123456789");
+    expect(account.configured).toBe(true);
+  });
+
   it("falls back to default endpoints when hot-reload leaves endpoint fields as empty strings", () => {
     const cfg: ClawdbotConfig = {
       channels: {
