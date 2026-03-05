@@ -7,7 +7,7 @@ const DmPolicySchema = z.enum(["open", "pairing"]).default("open");
 // - length: split by character limit
 // - newline: split at paragraph boundaries (blank lines)
 // - raw: forward upstream chunks as-is (no secondary chunking)
-const ChunkModeSchema = z.enum(["length", "newline", "raw"]).default("newline");
+const ChunkModeSchema = z.enum(["length", "newline", "raw"]).default("raw");
 
 const WeiboSharedConfigShape = {
   dmPolicy: DmPolicySchema.optional(),

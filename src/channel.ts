@@ -69,7 +69,7 @@ export const weiboPlugin: ChannelPlugin<ResolvedWeiboAccount> = {
         dmPolicy: { type: "string", enum: ["open", "pairing"], default: "open", title: "私信策略", description: "open=允许所有人私信, pairing=仅允许配对用户" },
         allowFrom: { type: "array", items: { type: "string" }, title: "允许列表", description: "允许发送私信的用户 ID 列表（白名单）" },
         textChunkLimit: { type: "integer", minimum: 1, title: "文本分片限制", description: "单条消息最大字符数，超出后自动分片" },
-        chunkMode: { type: "string", enum: ["length", "newline", "raw"], default: "newline", title: "分片模式", description: "newline=按段落分片, length=按字符数分片, raw=转发上游分片" },
+        chunkMode: { type: "string", enum: ["length", "newline", "raw"], default: "raw", title: "分片模式", description: "newline=按段落分片, length=按字符数分片, raw=转发上游分片" },
         accounts: {
           type: "object",
           additionalProperties: {
@@ -82,7 +82,7 @@ export const weiboPlugin: ChannelPlugin<ResolvedWeiboAccount> = {
               wsEndpoint: { type: "string", default: "ws://open-im.api.weibo.com/ws/stream", title: "WebSocket 地址", description: "微博 WebSocket 服务地址" },
               tokenEndpoint: { type: "string", default: "http://open-im.api.weibo.com/open/auth/ws_token", title: "Token 服务地址", description: "获取 WebSocket Token 的服务地址" },
               textChunkLimit: { type: "integer", minimum: 1, title: "文本分片限制", description: "单条消息最大字符数，超出后自动分片" },
-              chunkMode: { type: "string", enum: ["length", "newline", "raw"], default: "newline", title: "分片模式", description: "newline=按段落分片, length=按字符数分片, raw=转发上游分片" },
+              chunkMode: { type: "string", enum: ["length", "newline", "raw"], default: "raw", title: "分片模式", description: "newline=按段落分片, length=按字符数分片, raw=转发上游分片" },
             },
           },
         },
