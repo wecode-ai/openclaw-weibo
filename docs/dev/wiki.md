@@ -413,6 +413,7 @@ ws://open-im.api.weibo.com/ws/stream?app_id=<APP_ID>&token=<TOKEN>
 | `payload.text` | `string` | 是 | 消息文本 |
 | `payload.messageId` | `string` | 是 | 客户端生成的消息 ID |
 | `payload.chunkId` | `number` | 是 | 分片序号，从 `0` 开始 |
+| `payload.done` | `boolean` | 是 | 当前消息片段是否为最后一段；最后一段为 `true` |
 
 示例：
 
@@ -423,7 +424,8 @@ ws://open-im.api.weibo.com/ws/stream?app_id=<APP_ID>&token=<TOKEN>
     "toUserId": "123456789",
     "text": "这是一条回复",
     "messageId": "msg_1741080000000_abcd",
-    "chunkId": 0
+    "chunkId": 0,
+    "done": true
   }
 }
 ```
@@ -433,13 +435,14 @@ ws://open-im.api.weibo.com/ws/stream?app_id=<APP_ID>&token=<TOKEN>
 - `toUserId` 来自 OpenClaw 的 `to`，最终会被归一化为裸用户 ID
 - `messageId` 由插件生成，格式近似 `msg_<timestamp>_<random>`
 - `chunkId` 是分片号，长文本回复会复用同一个 `messageId`，仅递增 `chunkId`
+- `done` 用于标识回复是否结束；单条消息为 `true`，分片消息仅最后一片为 `true`
 
 本地模拟器当前只严格使用两个字段：
 
 - `payload.toUserId`
 - `payload.text`
 
-模拟器会原样记录 `messageId` 和 `chunkId` 到日志与原始 payload 中，但不会基于它们做回执映射。
+模拟器会原样记录 `messageId`、`chunkId` 和 `done` 到日志与原始 payload 中，但不会基于它们做回执映射。
 
 建议约束：
 

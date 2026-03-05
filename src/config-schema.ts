@@ -3,14 +3,20 @@ export { z };
 
 const DmPolicySchema = z.enum(["open", "pairing"]).default("open");
 
-// Chunk mode: "length" = split by character limit, "newline" = split at newlines
-const ChunkModeSchema = z.enum(["length", "newline"]).default("newline");
+// Chunk mode:
+// - length: split by character limit
+// - newline: split at paragraph boundaries (blank lines)
+// - raw: forward upstream chunks as-is (no secondary chunking)
+const ChunkModeSchema = z.enum(["length", "newline", "raw"]).default("newline");
 
 const WeiboSharedConfigShape = {
   dmPolicy: DmPolicySchema.optional(),
   allowFrom: z.array(z.string()).optional(),
   textChunkLimit: z.number().int().positive().optional(),
   chunkMode: ChunkModeSchema,
+  // Whether to allow OpenClaw block streaming for this channel/account.
+  // true: stream block replies progressively; false: final-only delivery.
+  blockStreaming: z.boolean().default(true),
 };
 
 export const WeiboAccountConfigSchema = z

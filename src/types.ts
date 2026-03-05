@@ -90,4 +90,5 @@ export type WeiboSendResult = {
   messageId: string;
   chatId: string;
   chunkId: number;
+  done: boolean;
 };

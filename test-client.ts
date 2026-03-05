@@ -39,6 +39,7 @@ async function main() {
           text: "Hello from test client!",
           messageId: `msg_${Date.now()}`,
           chunkId: 0,
+          done: true,
         },
       });
     },

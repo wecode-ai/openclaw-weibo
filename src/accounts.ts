@@ -49,6 +49,7 @@ export function resolveWeiboAccount({
         wsEndpoint: topLevelWsEndpoint ?? DEFAULT_WS_ENDPOINT,
         textChunkLimit: weiboCfg.textChunkLimit,
         chunkMode: weiboCfg.chunkMode ?? "newline",
+        blockStreaming: weiboCfg.blockStreaming ?? true,
       },
     };
   }
@@ -63,6 +64,7 @@ export function resolveWeiboAccount({
     allowFrom: weiboCfg?.allowFrom,
     textChunkLimit: weiboCfg?.textChunkLimit,
     chunkMode: weiboCfg?.chunkMode,
+    blockStreaming: weiboCfg?.blockStreaming,
   };
 
   const merged = {
@@ -80,6 +82,7 @@ export function resolveWeiboAccount({
     allowFrom: accountCfg?.allowFrom ?? topLevel.allowFrom ?? [],
     textChunkLimit: accountCfg?.textChunkLimit ?? topLevel.textChunkLimit,
     chunkMode: accountCfg?.chunkMode ?? topLevel.chunkMode ?? "newline",
+    blockStreaming: accountCfg?.blockStreaming ?? topLevel.blockStreaming ?? true,
   };
 
   const hasCredentials = !!(merged.appId && merged.appSecret);
@@ -100,6 +103,7 @@ export function resolveWeiboAccount({
       wsEndpoint: merged.wsEndpoint,
       textChunkLimit: merged.textChunkLimit,
       chunkMode: merged.chunkMode,
+      blockStreaming: merged.blockStreaming,
     },
   };
 }
