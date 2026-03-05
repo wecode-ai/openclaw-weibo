@@ -25,11 +25,14 @@ vi.mock("../runtime.js", () => ({
 }));
 
 describe("handleWeiboMessage chunk mode", () => {
+  const saveMediaBufferMock = vi.fn();
+
   beforeEach(() => {
     sendMessageWeiboMock.mockClear();
     generateWeiboMessageIdMock.mockClear();
     resolveWeiboAccountMock.mockReset();
     getWeiboRuntimeMock.mockReset();
+    saveMediaBufferMock.mockReset();
 
     resolveWeiboAccountMock.mockReturnValue({
       accountId: "default",
@@ -43,6 +46,9 @@ describe("handleWeiboMessage chunk mode", () => {
 
     getWeiboRuntimeMock.mockReturnValue({
       channel: {
+        media: {
+          saveMediaBuffer: saveMediaBufferMock,
+        },
         routing: {
           resolveAgentRoute: () => ({
             agentId: "agent-1",
@@ -107,5 +113,6 @@ describe("handleWeiboMessage chunk mode", () => {
       messageId: "outbound_group_1",
       chunkId: 1,
     }));
+    expect(saveMediaBufferMock).not.toHaveBeenCalled();
   });
 });
