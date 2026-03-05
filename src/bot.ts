@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { buildAgentMediaPayload, type ClawdbotConfig, type RuntimeEnv } from "openclaw/plugin-sdk";
+import type { ClawdbotConfig, RuntimeEnv } from "openclaw/plugin-sdk";
 import type {
   WeiboInboundAttachmentPart,
   WeiboMessageContext,
@@ -9,6 +9,7 @@ import type {
 import { resolveWeiboAccount } from "./accounts.js";
 import { createWeiboOutboundStream } from "./outbound-stream.js";
 import { getWeiboRuntime } from "./runtime.js";
+import { buildAgentMediaPayloadCompat } from "./plugin-sdk-compat.js";
 
 // Simple in-memory dedup
 const processedMessages = new Set<string>();
@@ -125,7 +126,7 @@ async function persistWeiboInboundAttachments(params: {
   normalized: NormalizedWeiboInboundInput;
   runtimeCore: ReturnType<typeof getWeiboRuntime>;
   error: (message: string, ...args: unknown[]) => void;
-}): Promise<ReturnType<typeof buildAgentMediaPayload>> {
+}): Promise<ReturnType<typeof buildAgentMediaPayloadCompat>> {
   const { normalized, runtimeCore, error } = params;
   const mediaList: Array<{ path: string; contentType?: string | null }> = [];
 
@@ -184,7 +185,7 @@ async function persistWeiboInboundAttachments(params: {
     }
   }
 
-  return buildAgentMediaPayload(mediaList);
+  return buildAgentMediaPayloadCompat(mediaList);
 }
 
 export type HandleWeiboMessageParams = {
@@ -406,47 +407,67 @@ export async function handleWeiboMessage(params: HandleWeiboMessageParams): Prom
   log(`weibo[${accountId}]: dispatching to agent (session=${route.sessionKey})`);
 
   try {
-    const result = await core.channel.reply.withReplyDispatcher({
+    const onSettled = async () => {
+      streamDebug("dispatcher_settled_before", {
+        currentOutboundMessageId,
+        currentOutboundChunkId,
+        ...outboundStream.snapshot(),
+      });
+      await outboundStream.settle();
+      streamDebug("dispatcher_settled_after", {
+        currentOutboundMessageId,
+        currentOutboundChunkId,
+        ...outboundStream.snapshot(),
+      });
+      currentOutboundMessageId = null;
+      currentOutboundChunkId = 0;
+      markDispatchIdle();
+    };
+
+    const runDispatch = () => core.channel.reply.dispatchReplyFromConfig({
+      ctx: ctxPayload,
+      cfg,
       dispatcher,
-      onSettled: async () => {
-        streamDebug("dispatcher_settled_before", {
-          currentOutboundMessageId,
-          currentOutboundChunkId,
-          ...outboundStream.snapshot(),
-        });
-        await outboundStream.settle();
-        streamDebug("dispatcher_settled_after", {
-          currentOutboundMessageId,
-          currentOutboundChunkId,
-          ...outboundStream.snapshot(),
-        });
-        currentOutboundMessageId = null;
-        currentOutboundChunkId = 0;
-        markDispatchIdle();
-      },
-      run: () => core.channel.reply.dispatchReplyFromConfig({
-        ctx: ctxPayload,
-        cfg,
-        dispatcher,
-        replyOptions: {
-          ...replyOptions,
-          disableBlockStreaming,
-          onPartialReply: async (payload) => {
-            streamDebug("on_partial_reply", {
-              textLen: (payload.text ?? "").length,
-              preview: (payload.text ?? "").slice(0, 80),
-            });
-            await outboundStream.pushPartialSnapshot(payload.text ?? "");
-          },
-          onAssistantMessageStart: () => {
-            streamDebug("on_assistant_message_start");
-          },
-          onReasoningEnd: () => {
-            streamDebug("on_reasoning_end");
-          },
+      replyOptions: {
+        ...replyOptions,
+        disableBlockStreaming,
+        onPartialReply: async (payload) => {
+          streamDebug("on_partial_reply", {
+            textLen: (payload.text ?? "").length,
+            preview: (payload.text ?? "").slice(0, 80),
+          });
+          await outboundStream.pushPartialSnapshot(payload.text ?? "");
         },
-      }),
+        onAssistantMessageStart: () => {
+          streamDebug("on_assistant_message_start");
+        },
+        onReasoningEnd: () => {
+          streamDebug("on_reasoning_end");
+        },
+      },
     });
+
+    const withReplyDispatcher = (core.channel.reply as {
+      withReplyDispatcher?: (params: {
+        dispatcher: unknown;
+        run: () => Promise<{ queuedFinal: boolean; counts: { final: number } }>;
+        onSettled?: () => Promise<void> | void;
+      }) => Promise<{ queuedFinal: boolean; counts: { final: number } }>;
+    }).withReplyDispatcher;
+
+    const result = typeof withReplyDispatcher === "function"
+      ? await withReplyDispatcher({
+        dispatcher,
+        onSettled,
+        run: runDispatch,
+      })
+      : await (async () => {
+        try {
+          return await runDispatch();
+        } finally {
+          await onSettled();
+        }
+      })();
 
     log(`weibo[${accountId}]: dispatch complete (queuedFinal=${result.queuedFinal}, replies=${result.counts.final})`);
   } catch (err) {
