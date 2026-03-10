@@ -4,6 +4,7 @@ import { setWeiboRuntime } from "./src/runtime.js";
 import { reconnectWeiboMonitor } from "./src/monitor.js";
 import { clearClientCache } from "./src/client.js";
 import { clearTokenCache } from "./src/token.js";
+import { registerWeiboSearchTools } from "./src/search.js";
 
 export { monitorWeiboProvider } from "./src/monitor.js";
 export { sendMessageWeibo } from "./src/send.js";
@@ -17,6 +18,7 @@ const plugin = {
   register(api: OpenClawPluginApi) {
     setWeiboRuntime(api.runtime);
     api.registerChannel({ plugin: weiboPlugin });
+    registerWeiboSearchTools(api);
     api.registerGatewayMethod("weibo.reconnect", async ({ params, respond, context }) => {
       const accountId =
         typeof params.accountId === "string" && params.accountId.trim()

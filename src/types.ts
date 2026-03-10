@@ -1,8 +1,9 @@
 import type { z } from "zod";
-import type { WeiboConfigSchema, WeiboAccountConfigSchema } from "./config-schema.js";
+import type { WeiboConfigSchema, WeiboAccountConfigSchema, WeiboToolsConfigSchema } from "./config-schema.js";
 
 export type WeiboConfig = z.infer<typeof WeiboConfigSchema>;
 export type WeiboAccountConfig = z.infer<typeof WeiboAccountConfigSchema>;
+export type WeiboToolsConfig = z.infer<typeof WeiboToolsConfigSchema>;
 
 export type ResolvedWeiboAccount = {
   accountId: string;

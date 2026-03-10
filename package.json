@@ -32,6 +32,7 @@
     }
   },
   "dependencies": {
+    "@sinclair/typebox": "0.34.48",
     "ws": "^8.18.0",
     "zod": "^4.3.6"
   },
