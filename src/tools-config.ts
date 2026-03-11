@@ -2,10 +2,12 @@ import type { WeiboToolsConfig } from "./types.js";
 
 export type ResolvedWeiboToolsConfig = Required<{
   search: boolean;
+  myWeibo: boolean;
 }>;
 
 const DEFAULT_TOOLS_CONFIG: ResolvedWeiboToolsConfig = {
   search: true, // Search enabled by default
+  myWeibo: true, // My weibo enabled by default
 };
 
 /**
@@ -20,6 +22,7 @@ export function resolveToolsConfig(
   }
   return {
     search: tools.search ?? DEFAULT_TOOLS_CONFIG.search,
+    myWeibo: tools.myWeibo ?? DEFAULT_TOOLS_CONFIG.myWeibo,
   };
 }
 
@@ -32,10 +35,12 @@ export function resolveAnyEnabledWeiboToolsConfig(
 ): ResolvedWeiboToolsConfig {
   const merged: ResolvedWeiboToolsConfig = {
     search: false,
+    myWeibo: false,
   };
   for (const account of accounts) {
     const cfg = resolveToolsConfig(account.config.tools);
     merged.search = merged.search || cfg.search;
+    merged.myWeibo = merged.myWeibo || cfg.myWeibo;
   }
   // If no accounts have explicit config, use defaults
   if (accounts.length === 0) {

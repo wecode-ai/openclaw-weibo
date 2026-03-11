@@ -4,7 +4,8 @@ import { setWeiboRuntime } from "./src/runtime.js";
 import { reconnectWeiboMonitor } from "./src/monitor.js";
 import { clearClientCache } from "./src/client.js";
 import { clearTokenCache } from "./src/token.js";
-import { registerWeiboSearchTools } from "./src/search.js";
+import { registerWeiboSearchTools } from "./src/weibo-search.js";
+import { registerWeiboStatusTools } from "./src/weibo-status.js";
 
 export { monitorWeiboProvider } from "./src/monitor.js";
 export { sendMessageWeibo } from "./src/send.js";
@@ -19,6 +20,7 @@ const plugin = {
     setWeiboRuntime(api.runtime);
     api.registerChannel({ plugin: weiboPlugin });
     registerWeiboSearchTools(api);
+    registerWeiboStatusTools(api);
 
     // 工具调用钩子
     api.on("before_tool_call", (event) => {
