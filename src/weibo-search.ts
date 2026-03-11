@@ -14,7 +14,7 @@ function json(data: unknown) {
 
 /**
  * 微博搜索 API 响应结构
- * API: http://10.54.18.236:9011/open/wis/search_query
+ * API: http://open-im.api.weibo.com/open/wis/search_query
  */
 export type WeiboSearchApiResponse = {
   code: number;
@@ -167,7 +167,7 @@ async function getValidSearchToken(
 // ============ Core Functions ============
 
 // 默认搜索端点
-const DEFAULT_SEARCH_ENDPOINT = "http://10.54.18.236:9011/open/wis/search_query";
+const DEFAULT_SEARCH_ENDPOINT = "http://open-im.api.weibo.com/open/wis/search_query";
 
 /**
  * 搜索微博内容
@@ -176,9 +176,9 @@ const DEFAULT_SEARCH_ENDPOINT = "http://10.54.18.236:9011/open/wis/search_query"
 async function searchWeibo(
   query: string,
   token: string,
-  searchEndpoint?: string
+  weiboSearchEndpoint?: string
 ): Promise<WeiboSearchApiResponse> {
-  const endpoint = searchEndpoint || DEFAULT_SEARCH_ENDPOINT;
+  const endpoint = weiboSearchEndpoint || DEFAULT_SEARCH_ENDPOINT;
 
   const url = new URL(endpoint);
   url.searchParams.set("query", query);
@@ -248,8 +248,8 @@ function formatSearchResult(result: WeiboSearchApiResponse) {
 // ============ Configuration Types ============
 
 export type WeiboSearchConfig = {
-  /** 搜索 API 端点，默认为 10.54.18.236:9011 */
-  searchEndpoint?: string;
+  /** 搜索 API 端点，默认为 open-im.api.weibo.com */
+  weiboSearchEndpoint?: string;
   /** App ID，用于获取 token */
   appId?: string;
   /** App Secret，用于获取 token */
@@ -263,11 +263,11 @@ export type WeiboSearchConfig = {
 function getSearchConfig(api: OpenClawPluginApi): WeiboSearchConfig {
   const weiboCfg = api.config?.channels?.weibo as Record<string, unknown> | undefined;
   return {
-    searchEndpoint: weiboCfg?.searchEndpoint as string | undefined,
+    weiboSearchEndpoint: weiboCfg?.weiboSearchEndpoint as string | undefined,
     appId: weiboCfg?.appId as string | undefined,
     appSecret: weiboCfg?.appSecret as string | undefined,
     tokenEndpoint: weiboCfg?.tokenEndpoint as string | undefined,
-    enabled: weiboCfg?.searchEnabled !== false,
+    enabled: weiboCfg?.weiboSearchEnabled !== false,
   };
 }
 
@@ -311,7 +311,7 @@ export function registerWeiboSearchTools(api: OpenClawPluginApi) {
           const result = await searchWeibo(
             p.query,
             token,
-            searchCfg.searchEndpoint
+            searchCfg.weiboSearchEndpoint
           );
 
           return json(formatSearchResult(result));

@@ -110,7 +110,7 @@ description: |
     "weibo": {
       "appId": "your_app_id",
       "appSecret": "your_app_secret",
-      "weiboStatusEndpoint": "http://10.54.18.236:9011/open/status/user_timeline",
+      "weiboStatusEndpoint": "http://10.54.19.204:9810/open/status/user_timeline",
       "tokenEndpoint": "http://open-im.api.weibo.com/open/auth/ws_token",
       "weiboStatusEnabled": true
     }
@@ -124,7 +124,7 @@ description: |
 |--------|------|------|--------|------|
 | `appId` | string | 是 | - | 应用 ID，用于获取 token |
 | `appSecret` | string | 是 | - | 应用密钥，用于获取 token |
-| `weiboStatusEndpoint` | string | 否 | `http://10.54.18.236:9011/open/status/user_timeline` | 用户微博 API 端点 |
+| `weiboStatusEndpoint` | string | 否 | `http://open-im.api.weibo.com/open/status/user_timeline` | 用户微博 API 端点 |
 | `tokenEndpoint` | string | 否 | `http://open-im.api.weibo.com/open/auth/ws_token` | Token 获取端点 |
 | `weiboStatusEnabled` | boolean | 否 | `true` | 是否启用微博状态工具 |
 
@@ -134,7 +134,7 @@ description: |
 
 ### 获取用户微博
 ```
-GET http://10.54.18.236:9011/open/status/user_timeline?token={token}&count={数量}&page={页码}
+GET http://open-im.api.weibo.com/open/status/user_timeline?token={token}&count={数量}&page={页码}
 ```
 
 ### Token 获取

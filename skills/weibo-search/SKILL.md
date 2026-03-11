@@ -87,8 +87,8 @@ description: |
 {
   "channels": {
     "weibo": {
-      "searchEndpoint": "http://10.54.18.236:9011/open/wis/search_query",
-      "searchEnabled": true
+      "weiboSearchEndpoint": "http://open-im.api.weibo.com/open/wis/search_query",
+      "weiboSearchEnabled": true
     }
   }
 }
@@ -98,15 +98,15 @@ description: |
 
 | 配置项 | 类型 | 必填 | 默认值 | 说明 |
 |--------|------|------|--------|------|
-| `searchEndpoint` | string | 否 | `http://10.54.18.236:9011/open/wis/search_query` | 搜索 API 端点 |
-| `searchEnabled` | boolean | 否 | `true` | 是否启用搜索工具 |
+| `weiboSearchEndpoint` | string | 否 | `http://open-im.api.weibo.com/open/wis/search_query` | 搜索 API 端点 |
+| `weiboSearchEnabled` | boolean | 否 | `true` | 是否启用搜索工具 |
 
 ## API 说明
 
 此工具使用微博开放平台的搜索接口：
 
 ```
-GET http://10.54.18.236:9011/open/wis/search_query?query={关键词}
+GET http://open-im.api.weibo.com/open/wis/search_query?query={关键词}
 ```
 
 

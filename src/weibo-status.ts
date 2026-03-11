@@ -34,7 +34,7 @@ function json(data: unknown) {
 
 /**
  * 用户微博 API 响应结构
- * API: http://10.54.18.236:9011/open/status/user_timeline
+ * API: http://open-im.api.weibo.com/open/status/user_timeline
  */
 export type WeiboStatusApiResponse = {
   code: number;
@@ -159,7 +159,7 @@ async function getValidWeiboStatusToken(
 // ============ Core Functions ============
 
 // 默认端点
-const DEFAULT_WEIBO_STATUS_ENDPOINT = "http://10.54.18.236:9011/open/status/user_timeline";
+const DEFAULT_WEIBO_STATUS_ENDPOINT = "http://open-im.api.weibo.com/open/status/user_timeline";
 
 /**
  * 获取用户自己发布的微博
@@ -245,7 +245,7 @@ function formatWeiboStatusResult(result: WeiboStatusApiResponse) {
 // ============ Configuration Types ============
 
 export type WeiboStatusConfig = {
-  /** API 端点，默认为 10.54.18.236:9011 */
+  /** API 端点，默认为 open-im.api.weibo.com */
   weiboStatusEndpoint?: string;
   /** App ID，用于获取 token */
   appId?: string;
