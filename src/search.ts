@@ -14,7 +14,7 @@ function json(data: unknown) {
 
 /**
  * 微博搜索 API 响应结构
- * API: http://dmtest.api.weibo.com/open/wis/search_by_sid
+ * API: http://10.54.18.236:9011/open/wis/search_query
  */
 export type WeiboSearchApiResponse = {
   code: number;
@@ -68,28 +68,121 @@ export type WeiboSearchResponse = {
   next_cursor: number;
 };
 
+// ============ Token Management ============
+
+// Token 过期时间：2小时（7200秒），提前60秒刷新
+const TOKEN_EXPIRE_SECONDS = 7200;
+const TOKEN_REFRESH_BUFFER_SECONDS = 60;
+
+// 默认 token 端点
+const DEFAULT_TOKEN_ENDPOINT = "http://open-im.api.weibo.com/open/auth/ws_token";
+
+type SearchTokenCache = {
+  token: string;
+  acquiredAt: number;
+  expiresIn: number;
+};
+
+// 搜索专用的 token 缓存
+let searchTokenCache: SearchTokenCache | null = null;
+
+type SearchTokenResponse = {
+  data: {
+    token: string;
+    expire_in: number;
+  };
+};
+
+/**
+ * 获取搜索用的 token
+ * 通过 http://open-im.api.weibo.com/open/auth/ws_token 获取
+ * token 过期时间为 2 小时
+ */
+async function fetchSearchToken(
+  appId: string,
+  appSecret: string,
+  tokenEndpoint?: string
+): Promise<SearchTokenCache> {
+  const endpoint = tokenEndpoint || DEFAULT_TOKEN_ENDPOINT;
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      app_id: appId,
+      app_secret: appSecret,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => "");
+    throw new Error(
+      `获取搜索 token 失败: ${response.status} ${response.statusText}${errorText ? ` - ${errorText}` : ""}`
+    );
+  }
+
+  const result = (await response.json()) as SearchTokenResponse;
+
+  if (!result.data?.token) {
+    throw new Error("获取搜索 token 失败: 响应中缺少 token");
+  }
+
+  const tokenCache: SearchTokenCache = {
+    token: result.data.token,
+    acquiredAt: Date.now(),
+    expiresIn: result.data.expire_in || TOKEN_EXPIRE_SECONDS,
+  };
+
+  searchTokenCache = tokenCache;
+  return tokenCache;
+}
+
+/**
+ * 获取有效的搜索 token
+ * 如果缓存的 token 未过期则返回缓存，否则重新获取
+ */
+async function getValidSearchToken(
+  appId: string,
+  appSecret: string,
+  tokenEndpoint?: string
+): Promise<string> {
+  // 检查缓存的 token 是否有效
+  if (searchTokenCache) {
+    const expiresAt =
+      searchTokenCache.acquiredAt +
+      searchTokenCache.expiresIn * 1000 -
+      TOKEN_REFRESH_BUFFER_SECONDS * 1000;
+    if (Date.now() < expiresAt) {
+      return searchTokenCache.token;
+    }
+  }
+
+  // 获取新 token
+  const tokenResult = await fetchSearchToken(appId, appSecret, tokenEndpoint);
+  return tokenResult.token;
+}
+
 // ============ Core Functions ============
 
-// 默认搜索端点（不需要认证）
-const DEFAULT_SEARCH_ENDPOINT = "http://dmtest.api.weibo.com/open/wis/search_by_sid";
-// 默认 SID
-const DEFAULT_SID = "v_openclaw_social";
+// 默认搜索端点
+const DEFAULT_SEARCH_ENDPOINT = "http://10.54.18.236:9011/open/wis/search_query";
 
 /**
  * 搜索微博内容
- * 使用 SID 方式访问，不需要 OAuth 认证
+ * 使用 token 认证方式访问
  */
 async function searchWeibo(
   query: string,
-  searchEndpoint?: string,
-  sid?: string
+  token: string,
+  searchEndpoint?: string
 ): Promise<WeiboSearchApiResponse> {
   const endpoint = searchEndpoint || DEFAULT_SEARCH_ENDPOINT;
-  const searchSid = sid || DEFAULT_SID;
 
   const url = new URL(endpoint);
   url.searchParams.set("query", query);
-  url.searchParams.set("sid", searchSid);
+  url.searchParams.set("token", token);
 
   const response = await fetch(url.toString(), {
     method: "GET",
@@ -155,10 +248,14 @@ function formatSearchResult(result: WeiboSearchApiResponse) {
 // ============ Configuration Types ============
 
 export type WeiboSearchConfig = {
-  /** 搜索 API 端点，默认为 dmtest.api.weibo.com */
+  /** 搜索 API 端点，默认为 10.54.18.236:9011 */
   searchEndpoint?: string;
-  /** SID 标识符，默认为 v_openclaw_social */
-  sid?: string;
+  /** App ID，用于获取 token */
+  appId?: string;
+  /** App Secret，用于获取 token */
+  appSecret?: string;
+  /** Token 端点，默认为 http://open-im.api.weibo.com/open/auth/ws_token */
+  tokenEndpoint?: string;
   /** 是否启用搜索工具，默认为 true */
   enabled?: boolean;
 };
@@ -167,7 +264,9 @@ function getSearchConfig(api: OpenClawPluginApi): WeiboSearchConfig {
   const weiboCfg = api.config?.channels?.weibo as Record<string, unknown> | undefined;
   return {
     searchEndpoint: weiboCfg?.searchEndpoint as string | undefined,
-    sid: weiboCfg?.sid as string | undefined,
+    appId: weiboCfg?.appId as string | undefined,
+    appSecret: weiboCfg?.appSecret as string | undefined,
+    tokenEndpoint: weiboCfg?.tokenEndpoint as string | undefined,
     enabled: weiboCfg?.searchEnabled !== false,
   };
 }
@@ -183,20 +282,36 @@ export function registerWeiboSearchTools(api: OpenClawPluginApi) {
     return;
   }
 
+  // 检查是否配置了认证信息
+  if (!searchCfg.appId || !searchCfg.appSecret) {
+    api.logger.warn?.("weibo_search: appId or appSecret not configured, search tool disabled");
+    return;
+  }
+
+  const appId = searchCfg.appId;
+  const appSecret = searchCfg.appSecret;
+
   api.registerTool(
     () => ({
       name: "weibo_search",
       label: "Weibo Search",
       description:
-        "搜索微博内容。返回 AI 生成的搜索结果摘要。不需要认证。",
+        "搜索微博内容。返回 AI 生成的搜索结果摘要。需要 token 认证。",
       parameters: WeiboSearchSchema,
       async execute(_toolCallId, params) {
         const p = params as WeiboSearchParams;
         try {
+          // 获取有效的 token
+          const token = await getValidSearchToken(
+            appId,
+            appSecret,
+            searchCfg.tokenEndpoint
+          );
+
           const result = await searchWeibo(
             p.query,
-            searchCfg.searchEndpoint,
-            searchCfg.sid
+            token,
+            searchCfg.searchEndpoint
           );
 
           return json(formatSearchResult(result));

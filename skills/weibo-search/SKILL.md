@@ -81,16 +81,13 @@ description: |
 
 ## 配置（可选）
 
-此工具默认使用内置的搜索端点和 SID，无需额外配置即可使用。
 
-如需自定义配置，可在 `openclaw.config.json` 中设置：
 
 ```json
 {
   "channels": {
     "weibo": {
-      "searchEndpoint": "http://dmtest.api.weibo.com/open/wis/search_by_sid",
-      "sid": "v_openclaw_social",
+      "searchEndpoint": "http://10.54.18.236:9011/open/wis/search_query",
       "searchEnabled": true
     }
   }
@@ -101,18 +98,15 @@ description: |
 
 | 配置项 | 类型 | 必填 | 默认值 | 说明 |
 |--------|------|------|--------|------|
-| `searchEndpoint` | string | 否 | `http://dmtest.api.weibo.com/open/wis/search_by_sid` | 搜索 API 端点 |
-| `sid` | string | 否 | `v_openclaw_social` | SID 标识符 |
+| `searchEndpoint` | string | 否 | `http://10.54.18.236:9011/open/wis/search_query` | 搜索 API 端点 |
 | `searchEnabled` | boolean | 否 | `true` | 是否启用搜索工具 |
 
 ## API 说明
 
-此工具使用微博开放平台的 SID 搜索接口：
+此工具使用微博开放平台的搜索接口：
 
 ```
-GET http://dmtest.api.weibo.com/open/wis/search_by_sid?query={关键词}&sid={sid}
+GET http://10.54.18.236:9011/open/wis/search_query?query={关键词}
 ```
 
-- 不需要 OAuth 认证
-- 通过 SID 标识调用方身份
-- 返回 AI 生成的搜索结果摘要
+
