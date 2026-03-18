@@ -9,6 +9,19 @@ const DmPolicySchema = z.enum(["open", "pairing"]).default("open");
 // - raw: forward upstream chunks as-is (no secondary chunking)
 const ChunkModeSchema = z.enum(["length", "newline", "raw"]).default("raw");
 
+/**
+ * Weibo tools configuration.
+ * Controls which tool categories are enabled.
+ */
+export const WeiboToolsConfigSchema = z
+  .object({
+    search: z.boolean().optional(), // Search operations (default: true)
+    myWeibo: z.boolean().optional(), // My weibo operations (default: true)
+    hotSearch: z.boolean().optional(), // Hot search operations (default: true)
+  })
+  .strict()
+  .optional();
+
 const WeiboSharedConfigShape = {
   dmPolicy: DmPolicySchema.optional(),
   allowFrom: z.array(z.string()).optional(),
@@ -17,6 +30,7 @@ const WeiboSharedConfigShape = {
   // Whether to allow OpenClaw block streaming for this channel/account.
   // true: stream block replies progressively; false: final-only delivery.
   blockStreaming: z.boolean().default(true),
+  tools: WeiboToolsConfigSchema,
 };
 
 export const WeiboAccountConfigSchema = z

@@ -297,15 +297,24 @@ export async function handleWeiboMessage(params: HandleWeiboMessageParams): Prom
   let currentOutboundMessageId: string | null = null;
   let currentOutboundChunkId = 0;
   let hasLoggedFirstChunkLatency = false;
+  let ensureOutboundMessageIdPromise: Promise<string> | null = null;
+  // Queue to serialize outbound chunk sends and prevent chunkId race conditions
+  let sendQueueTail: Promise<void> = Promise.resolve();
 
   const ensureOutboundMessageId = async (): Promise<string> => {
     if (currentOutboundMessageId) {
       return currentOutboundMessageId;
     }
-    const { generateWeiboMessageId } = await import("./send.js");
-    currentOutboundMessageId = generateWeiboMessageId();
-    currentOutboundChunkId = 0;
-    return currentOutboundMessageId;
+    // Use a shared promise to prevent concurrent initialization race conditions
+    if (!ensureOutboundMessageIdPromise) {
+      ensureOutboundMessageIdPromise = (async () => {
+        const { generateWeiboMessageId } = await import("./send.js");
+        currentOutboundMessageId = generateWeiboMessageId();
+        currentOutboundChunkId = 0;
+        return currentOutboundMessageId;
+      })();
+    }
+    return ensureOutboundMessageIdPromise;
   };
 
   const sendOutboundChunk = async (params: {
@@ -313,30 +322,46 @@ export async function handleWeiboMessage(params: HandleWeiboMessageParams): Prom
     done: boolean;
     source: "partial" | "deliver" | "settled";
   }): Promise<void> => {
-    const { sendMessageWeibo } = await import("./send.js");
-    const outboundMessageId = await ensureOutboundMessageId();
-    streamDebug("send_chunk", {
-      source: params.source,
-      messageId: outboundMessageId,
-      chunkId: currentOutboundChunkId,
-      done: params.done,
-      textLen: params.text.length,
-      preview: params.text.slice(0, 80),
+    // Chain this send operation to the queue to ensure sequential chunkId assignment
+    const previousTail = sendQueueTail;
+    let resolveThis: () => void;
+    sendQueueTail = new Promise<void>((resolve) => {
+      resolveThis = resolve;
     });
-    await sendMessageWeibo({
-      cfg,
-      to: fromUserId,
-      text: params.text,
-      messageId: outboundMessageId,
-      chunkId: currentOutboundChunkId,
-      done: params.done,
-    });
-    if (!hasLoggedFirstChunkLatency && params.text.length > 0) {
-      const elapsedMs = Math.max(0, Date.now() - inboundAcceptedAt);
-      log(`weibo[${accountId}]: first chunk first-char latency=${elapsedMs}ms`);
-      hasLoggedFirstChunkLatency = true;
+
+    try {
+      // Wait for previous sends to complete before proceeding
+      await previousTail;
+
+      const { sendMessageWeibo } = await import("./send.js");
+      const outboundMessageId = await ensureOutboundMessageId();
+      const chunkIdForThisSend = currentOutboundChunkId;
+      currentOutboundChunkId += 1;
+
+      streamDebug("send_chunk", {
+        source: params.source,
+        messageId: outboundMessageId,
+        chunkId: chunkIdForThisSend,
+        done: params.done,
+        textLen: params.text.length,
+        preview: params.text.slice(0, 80),
+      });
+      await sendMessageWeibo({
+        cfg,
+        to: fromUserId,
+        text: params.text,
+        messageId: outboundMessageId,
+        chunkId: chunkIdForThisSend,
+        done: params.done,
+      });
+      if (!hasLoggedFirstChunkLatency && params.text.length > 0) {
+        const elapsedMs = Math.max(0, Date.now() - inboundAcceptedAt);
+        log(`weibo[${accountId}]: first chunk first-char latency=${elapsedMs}ms`);
+        hasLoggedFirstChunkLatency = true;
+      }
+    } finally {
+      resolveThis!();
     }
-    currentOutboundChunkId += 1;
   };
 
   const outboundStream = createWeiboOutboundStream({
@@ -421,6 +446,7 @@ export async function handleWeiboMessage(params: HandleWeiboMessageParams): Prom
       });
       currentOutboundMessageId = null;
       currentOutboundChunkId = 0;
+      ensureOutboundMessageIdPromise = null;
       markDispatchIdle();
     };
 

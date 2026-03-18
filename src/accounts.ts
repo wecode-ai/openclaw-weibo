@@ -50,6 +50,7 @@ export function resolveWeiboAccount({
         textChunkLimit: weiboCfg.textChunkLimit,
         chunkMode: weiboCfg.chunkMode ?? "raw",
         blockStreaming: weiboCfg.blockStreaming ?? true,
+        tools: weiboCfg.tools,
       },
     };
   }
@@ -65,6 +66,7 @@ export function resolveWeiboAccount({
     textChunkLimit: weiboCfg?.textChunkLimit,
     chunkMode: weiboCfg?.chunkMode,
     blockStreaming: weiboCfg?.blockStreaming,
+    tools: weiboCfg?.tools,
   };
 
   const merged = {
@@ -83,6 +85,7 @@ export function resolveWeiboAccount({
     textChunkLimit: accountCfg?.textChunkLimit ?? topLevel.textChunkLimit,
     chunkMode: accountCfg?.chunkMode ?? topLevel.chunkMode ?? "raw",
     blockStreaming: accountCfg?.blockStreaming ?? topLevel.blockStreaming ?? true,
+    tools: accountCfg?.tools ?? topLevel.tools,
   };
 
   const hasCredentials = !!(merged.appId && merged.appSecret);
@@ -104,6 +107,7 @@ export function resolveWeiboAccount({
       textChunkLimit: merged.textChunkLimit,
       chunkMode: merged.chunkMode,
       blockStreaming: merged.blockStreaming,
+      tools: merged.tools,
     },
   };
 }

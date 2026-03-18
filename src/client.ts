@@ -1,5 +1,10 @@
+import { createRequire } from "module";
 import WebSocket from "ws";
 import type { ResolvedWeiboAccount, WeiboRuntimeStatusPatch } from "./types.js";
+
+// Read version from package.json
+const require = createRequire(import.meta.url);
+const { version: PLUGIN_VERSION } = require("../package.json") as { version: string };
 import {
   getValidToken,
   clearTokenCache,
@@ -125,6 +130,7 @@ export class WeiboWebSocketClient {
       const url = new URL(wsEndpoint);
       url.searchParams.set("app_id", appId);
       url.searchParams.set("token", token);
+      url.searchParams.set("version", PLUGIN_VERSION);
 
       this.ws = new WebSocket(url.toString());
 

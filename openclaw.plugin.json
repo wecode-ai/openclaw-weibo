@@ -1,8 +1,9 @@
 {
-    "id": "weibo",
+    "id": "weibo-openclaw-plugin",
     "channels": [
         "weibo"
     ],
+    "skills": ["./skills"],
     "configSchema": {
         "type": "object",
         "additionalProperties": false,

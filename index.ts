@@ -4,6 +4,9 @@ import { setWeiboRuntime } from "./src/runtime.js";
 import { reconnectWeiboMonitor } from "./src/monitor.js";
 import { clearClientCache } from "./src/client.js";
 import { clearTokenCache } from "./src/token.js";
+import { registerWeiboSearchTools } from "./src/weibo-search.js";
+import { registerWeiboStatusTools } from "./src/weibo-status.js";
+import { registerWeiboHotSearchTools } from "./src/weibo-hot-search.js";
 
 export { monitorWeiboProvider } from "./src/monitor.js";
 export { sendMessageWeibo } from "./src/send.js";
@@ -17,6 +20,26 @@ const plugin = {
   register(api: OpenClawPluginApi) {
     setWeiboRuntime(api.runtime);
     api.registerChannel({ plugin: weiboPlugin });
+    registerWeiboSearchTools(api);
+    registerWeiboStatusTools(api);
+    registerWeiboHotSearchTools(api);
+
+    // 工具调用钩子
+    api.on("before_tool_call", (event) => {
+        if (event.toolName.startsWith("weibo_")) {
+            console.log(`[微博工具调用] ${event.toolName} 参数: ${JSON.stringify(event.params)}`);
+        }
+    });
+    api.on("after_tool_call", (event) => {
+        if (event.toolName.startsWith("weibo_")) {
+            if (event.error) {
+                console.error(`[微博工具调用失败] ${event.toolName} 错误: ${event.error}`);
+            } else {
+                console.log(`[微博工具调用成功] ${event.toolName} 耗时: ${event.durationMs}ms`);
+            }
+        }
+    });
+
     api.registerGatewayMethod("weibo.reconnect", async ({ params, respond, context }) => {
       const accountId =
         typeof params.accountId === "string" && params.accountId.trim()
