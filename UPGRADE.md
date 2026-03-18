@@ -101,6 +101,11 @@ openclaw plugins list
 1. `~/.openclaw/extensions/weibo` 目录（Windows: `%USERPROFILE%\.openclaw\extensions\weibo`）不存在
 2. 配置文件中 `plugins.entries` 和 `plugins.installs` 中没有 `weibo` 条目
 
+### Q: 升级后的完整检查
+1. 通过openclaw命令检查当前插件 `openclaw plugins list`, 确认 `weibo-openclaw-plugin` 已正确安装并处于 `loaded` 状态。
+2. 配置文件中 `plugins.entries` 和 `plugins.installs` 中包含 `weibo-openclaw-plugin`, 并且没有 `weibo` 条目。
+3. 配置文件中 `channels.weibo` 配置项正确配置你的凭证（`appId` 和 `appSecret`）。
+
 ### Q: 升级后插件功能有变化吗？
 
 **A:** 新版本插件功能与旧版本保持一致，主要改进了安装和更新方式。后续可以通过以下命令轻松更新：
