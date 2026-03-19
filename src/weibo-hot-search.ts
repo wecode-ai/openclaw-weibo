@@ -29,6 +29,17 @@ function json(data: unknown) {
   };
 }
 
+function readOptionalNonBlankString(value: unknown): string | undefined {
+  if (typeof value === "number" && !Number.isNaN(value)) {
+    return String(value);
+  }
+  if (typeof value !== "string") {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed ? trimmed : undefined;
+}
+
 // ============ API Types ============
 
 /**
@@ -271,10 +282,10 @@ export type WeiboHotSearchConfig = {
 function getHotSearchConfig(api: OpenClawPluginApi): WeiboHotSearchConfig {
   const weiboCfg = api.config?.channels?.weibo as Record<string, unknown> | undefined;
   return {
-    weiboHotSearchEndpoint: weiboCfg?.weiboHotSearchEndpoint as string | undefined,
-    appId: weiboCfg?.appId as string | undefined,
-    appSecret: weiboCfg?.appSecret as string | undefined,
-    tokenEndpoint: weiboCfg?.tokenEndpoint as string | undefined,
+    weiboHotSearchEndpoint: readOptionalNonBlankString(weiboCfg?.weiboHotSearchEndpoint),
+    appId: readOptionalNonBlankString(weiboCfg?.appId),
+    appSecret: readOptionalNonBlankString(weiboCfg?.appSecret),
+    tokenEndpoint: readOptionalNonBlankString(weiboCfg?.tokenEndpoint),
     enabled: weiboCfg?.weiboHotSearchEnabled !== false,
   };
 }
