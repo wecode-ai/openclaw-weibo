@@ -54,7 +54,7 @@ const __dirname = path.dirname(__filename);
 // 配置常量
 // ============================================================================
 
-const BASE_URL = 'https://dm-test.api.weibo.com';
+const BASE_URL = 'https://open-im.api.weibo.com';
 
 const CONFIG_PATHS = {
   openclaw: path.join(os.homedir(), '.openclaw', 'openclaw.json'),
@@ -243,10 +243,15 @@ async function saveLocalConfig(config) {
   }
   
   await fs.mkdir(path.dirname(CONFIG_PATHS.local), { recursive: true });
+  
+  // Windows 不支持 Unix 文件权限模式，需要分平台处理
+  const isWindows = os.platform() === 'win32';
+  const writeOptions = isWindows ? {} : { mode: 0o600 };
+  
   await fs.writeFile(
     CONFIG_PATHS.local,
     JSON.stringify(encryptedConfig, null, 2),
-    { mode: 0o600 } // 设置文件权限为 600（仅所有者可读写）
+    writeOptions
   );
 }
 
@@ -332,10 +337,15 @@ class TokenManager {
    */
   async saveTokenCache() {
     await fs.mkdir(path.dirname(CONFIG_PATHS.tokenCache), { recursive: true });
+    
+    // Windows 不支持 Unix 文件权限模式，需要分平台处理
+    const isWindows = os.platform() === 'win32';
+    const writeOptions = isWindows ? {} : { mode: 0o600 };
+    
     await fs.writeFile(
       CONFIG_PATHS.tokenCache,
       JSON.stringify(this.tokenCache, null, 2),
-      { mode: 0o600 }
+      writeOptions
     );
   }
 

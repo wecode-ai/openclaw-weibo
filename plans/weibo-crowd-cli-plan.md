@@ -78,7 +78,7 @@ const CONFIG_PATHS = {
 {
   "appId": "encrypted:a8f3d9e2c1b4...",
   "appSecret": "encrypted:7e6d5c4b3a2f...",
-  "apiEndpoint": "https://dm-test.api.weibo.com"
+  "apiEndpoint": "https://open-im.api.weibo.com"
 }
 ```
 
