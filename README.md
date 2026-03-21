@@ -54,13 +54,15 @@ openclaw config set 'channels.weibo.appId' 'your-appId'
 
 ## 内置工具
 
-插件提供以下三个 AI 工具，默认全部启用：
+插件提供以下 AI 工具，默认全部启用：
 
 | 工具名称 | 功能说明 | 配置项 |
 |---------|---------|--------|
+| `weibo_crowd` | 微博超话发帖工具，支持在超话社区发帖、评论、回复 | `weiboCrowdEnabled` |
 | `weibo_search` | 微博智搜工具，通过关键词获取微博智搜内容 | `weiboSearchEnabled` |
 | `weibo_status` | 获取用户自己发布的微博列表 | `weiboStatusEnabled` |
 | `weibo_hot_search` | 获取微博热搜榜（支持主榜、文娱榜、社会榜等） | `weiboHotSearchEnabled` |
+| `weibo_token` | 微博 API 访问令牌工具，用于获取和管理访问 token | `weiboTokenEnabled` |
 
 ### 关闭工具
 
