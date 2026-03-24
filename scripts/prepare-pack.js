@@ -23,6 +23,7 @@ const commonFields = {
   license: rootPackageJson.license,
   files: [
     'src',
+    'bin',
     'index.js',
     'index.d.ts',
     'index.js.map',
@@ -30,6 +31,7 @@ const commonFields = {
     'openclaw.plugin.json',
     'skills'
   ],
+  bin: rootPackageJson.bin,
   dependencies: rootPackageJson.dependencies,
   bundledDependencies: rootPackageJson.bundledDependencies,
   openclaw: rootPackageJson.openclaw
@@ -67,6 +69,14 @@ if (fs.existsSync(skillsDir)) {
   copyDirectory(skillsDir, distSkillsDir);
 }
 
+// 复制 bin 目录到 dist/
+const binDir = path.join(projectRoot, 'bin');
+const distBinDir = path.join(distDir, 'bin');
+
+if (fs.existsSync(binDir)) {
+  copyDirectory(binDir, distBinDir);
+}
+
 // 复制 README.md 到 dist/
 const readmePath = path.join(projectRoot, 'README.md');
 if (fs.existsSync(readmePath)) {
@@ -98,7 +108,7 @@ if (fs.existsSync(distLockPath)) {
 }
 
 console.log('dist/package.json generated successfully (without dependencies)');
-console.log('Files copied to dist/: openclaw.plugin.json, skills/, README.md');
+console.log('Files copied to dist/: openclaw.plugin.json, skills/, bin/, README.md');
 console.log('Dependencies bundled in dist/node_modules');
 console.log('Users will have zero external dependencies to install!');
 

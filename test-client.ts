@@ -2,9 +2,12 @@
 // ⚠️ 警告：以下配置仅用于本地测试，请勿用于生产环境
 import { createWeiboClient } from "./src/client.js";
 import { resolveWeiboAccount } from "./src/accounts.js";
-import type { ClawdbotConfig } from "openclaw/plugin-sdk";
+import type { OpenClawConfig } from "openclaw/plugin-sdk/core";
 
-const testConfig: ClawdbotConfig = {
+// 测试用户 ID 常量
+const TEST_USER_ID = "123456789";
+
+const testConfig: OpenClawConfig = {
   channels: {
     weibo: {
       enabled: true,
@@ -12,7 +15,7 @@ const testConfig: ClawdbotConfig = {
       appSecret: "test_secret",
       wsEndpoint: "ws://localhost:9999",
       tokenEndpoint: "http://127.0.0.1:9810/open/auth/ws_token",
-      allowFrom: ["123456789"],
+      allowFrom: [TEST_USER_ID],
     },
   },
 };
@@ -35,7 +38,7 @@ async function main() {
       client.send({
         type: "send_message",
         payload: {
-          toUserId: "123456789",
+          toUserId: TEST_USER_ID,
           text: "Hello from test client!",
           messageId: `msg_${Date.now()}`,
           chunkId: 0,

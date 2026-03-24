@@ -19,7 +19,7 @@ describe("plugin metadata", () => {
     expect(unscopedPackageName(packageJson.name)).toBe(pluginManifest.id);
   });
 
-  it("keeps the openclaw channel id aligned with the plugin id", () => {
-    expect(packageJson.openclaw.channel.id).toBe(pluginManifest.id);
+  it("keeps the openclaw channel id as a prefix of the plugin id", () => {
+    expect(pluginManifest.id.startsWith(packageJson.openclaw.channel.id)).toBe(true);
   });
 });

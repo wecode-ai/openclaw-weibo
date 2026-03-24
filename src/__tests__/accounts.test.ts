@@ -1,15 +1,10 @@
 import { describe, it, expect } from "vitest";
-import {
-  resolveWeiboAccount,
-  listWeiboAccountIds,
-  resolveDefaultWeiboAccountId,
-  listEnabledWeiboAccounts,
-} from "../accounts.js";
-import type { ClawdbotConfig } from "openclaw/plugin-sdk";
+import { resolveWeiboAccount, listWeiboAccountIds } from "../accounts.js";
+import type { OpenClawConfig } from "openclaw/plugin-sdk/core";
 
 describe("resolveWeiboAccount", () => {
   it("returns default account from top-level config", () => {
-    const cfg: ClawdbotConfig = {
+    const cfg: OpenClawConfig = {
       channels: {
         weibo: {
           enabled: true,
@@ -26,7 +21,7 @@ describe("resolveWeiboAccount", () => {
   });
 
   it("returns named account from accounts map", () => {
-    const cfg: ClawdbotConfig = {
+    const cfg: OpenClawConfig = {
       channels: {
         weibo: {
           accounts: {
@@ -46,7 +41,7 @@ describe("resolveWeiboAccount", () => {
   });
 
   it("returns not configured for missing credentials", () => {
-    const cfg: ClawdbotConfig = {
+    const cfg: OpenClawConfig = {
       channels: {
         weibo: {},
       },
@@ -63,14 +58,14 @@ describe("resolveWeiboAccount", () => {
           appSecret: "test-secret",
         },
       },
-    } as ClawdbotConfig;
+    } as OpenClawConfig;
     const account = resolveWeiboAccount({ cfg, accountId: "default" });
     expect(account.appId).toBe("123456789");
     expect(account.configured).toBe(true);
   });
 
   it("falls back to default endpoints when hot-reload leaves endpoint fields as empty strings", () => {
-    const cfg: ClawdbotConfig = {
+    const cfg: OpenClawConfig = {
       channels: {
         weibo: {
           appId: "test-app-id",
@@ -89,7 +84,7 @@ describe("resolveWeiboAccount", () => {
   });
 
   it("defaults chunkMode to raw when config does not set it", () => {
-    const cfg: ClawdbotConfig = {
+    const cfg: OpenClawConfig = {
       channels: {
         weibo: {
           appId: "test-app-id",
@@ -105,7 +100,7 @@ describe("resolveWeiboAccount", () => {
 
 describe("listWeiboAccountIds", () => {
   it("returns default when only top-level config exists", () => {
-    const cfg: ClawdbotConfig = {
+    const cfg: OpenClawConfig = {
       channels: {
         weibo: {
           appId: "test",
@@ -116,7 +111,7 @@ describe("listWeiboAccountIds", () => {
   });
 
   it("returns all account ids including named ones", () => {
-    const cfg: ClawdbotConfig = {
+    const cfg: OpenClawConfig = {
       channels: {
         weibo: {
           appId: "top",

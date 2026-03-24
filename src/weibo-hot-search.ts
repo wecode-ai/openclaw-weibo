@@ -1,4 +1,4 @@
-import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk/core";
 import { Type, type Static } from "@sinclair/typebox";
 import { getValidWeiboToken, getWeiboTokenConfig } from "./weibo-token-tool.js";
 

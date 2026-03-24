@@ -1,4 +1,4 @@
-import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk/core";
 import { WeiboSearchSchema, type WeiboSearchParams } from "./search-schema.js";
 import { getValidWeiboToken, getWeiboTokenConfig } from "./weibo-token-tool.js";
 

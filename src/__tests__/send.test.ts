@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { ClawdbotConfig } from "openclaw/plugin-sdk";
+import type { OpenClawConfig } from "openclaw/plugin-sdk/core";
 import { sendMessageWeibo } from "../send.js";
 
 const sendMock = vi.hoisted(() => vi.fn());
@@ -40,7 +40,7 @@ describe("sendMessageWeibo", () => {
 
   it("sends messageId and chunkId when provided", async () => {
     await sendMessageWeibo({
-      cfg: {} as ClawdbotConfig,
+      cfg: {} as OpenClawConfig,
       to: "123456",
       text: "Reply",
       accountId: "default",
@@ -63,7 +63,7 @@ describe("sendMessageWeibo", () => {
 
   it("defaults chunkId to 0, done=true and returns same generated messageId", async () => {
     const result = await sendMessageWeibo({
-      cfg: {} as ClawdbotConfig,
+      cfg: {} as OpenClawConfig,
       to: "123456",
       text: "Reply",
       accountId: "default",
