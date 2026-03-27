@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { ClawdbotConfig } from "openclaw/plugin-sdk";
+import type { OpenClawConfig } from "openclaw/plugin-sdk/core";
 import { handleWeiboMessage } from "../bot.js";
 
 const sendMessageWeiboMock = vi.hoisted(() => vi.fn(async () => ({
@@ -103,7 +103,7 @@ describe("handleWeiboMessage chunk mode", () => {
 
   it("uses account chunkMode=newline when sending chunked replies", async () => {
     await handleWeiboMessage({
-      cfg: {} as ClawdbotConfig,
+      cfg: {} as OpenClawConfig,
       accountId: "default",
       event: {
         type: "message",
@@ -202,7 +202,7 @@ describe("handleWeiboMessage chunk mode", () => {
     });
 
     await handleWeiboMessage({
-      cfg: {} as ClawdbotConfig,
+      cfg: {} as OpenClawConfig,
       accountId: "default",
       event: {
         type: "message",
@@ -280,7 +280,7 @@ describe("handleWeiboMessage chunk mode", () => {
     });
 
     await handleWeiboMessage({
-      cfg: {} as ClawdbotConfig,
+      cfg: {} as OpenClawConfig,
       accountId: "default",
       event: {
         type: "message",
@@ -331,7 +331,7 @@ describe("handleWeiboMessage chunk mode", () => {
     });
 
     await handleWeiboMessage({
-      cfg: {} as ClawdbotConfig,
+      cfg: {} as OpenClawConfig,
       accountId: "default",
       event: {
         type: "message",
@@ -414,7 +414,7 @@ describe("handleWeiboMessage chunk mode", () => {
     });
 
     await handleWeiboMessage({
-      cfg: {} as ClawdbotConfig,
+      cfg: {} as OpenClawConfig,
       accountId: "default",
       event: {
         type: "message",
@@ -501,7 +501,7 @@ describe("handleWeiboMessage chunk mode", () => {
     });
 
     await handleWeiboMessage({
-      cfg: {} as ClawdbotConfig,
+      cfg: {} as OpenClawConfig,
       accountId: "default",
       event: {
         type: "message",
@@ -594,7 +594,7 @@ describe("handleWeiboMessage chunk mode", () => {
     });
 
     await handleWeiboMessage({
-      cfg: {} as ClawdbotConfig,
+      cfg: {} as OpenClawConfig,
       accountId: "default",
       event: {
         type: "message",
@@ -704,7 +704,7 @@ describe("handleWeiboMessage chunk mode", () => {
     });
 
     await handleWeiboMessage({
-      cfg: {} as ClawdbotConfig,
+      cfg: {} as OpenClawConfig,
       accountId: "default",
       event: {
         type: "message",
@@ -750,7 +750,7 @@ describe("handleWeiboMessage chunk mode", () => {
 
     try {
       await handleWeiboMessage({
-        cfg: {} as ClawdbotConfig,
+        cfg: {} as OpenClawConfig,
         accountId: "default",
         event: {
           type: "message",

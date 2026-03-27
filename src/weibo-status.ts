@@ -1,4 +1,4 @@
-import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk/core";
 import { Type, type Static } from "@sinclair/typebox";
 import { getValidWeiboToken, getWeiboTokenConfig } from "./weibo-token-tool.js";
 
@@ -107,7 +107,7 @@ async function fetchWeiboStatus(
 
   const url = new URL(apiEndpoint);
   url.searchParams.set("token", options.token);
-  
+
   if (options.count !== undefined) {
     url.searchParams.set("count", String(options.count));
   }
@@ -199,7 +199,7 @@ export type WeiboStatusConfig = {
 
 function getWeiboStatusConfig(api: OpenClawPluginApi): WeiboStatusConfig {
   const weiboCfg = api.config?.channels?.weibo as Record<string, unknown> | undefined;
-  
+
   return {
     weiboStatusEndpoint: readOptionalNonBlankString(weiboCfg?.weiboStatusEndpoint),
     appId: readOptionalNonBlankString(weiboCfg?.appId),
@@ -260,5 +260,4 @@ export function registerWeiboStatusTools(api: OpenClawPluginApi) {
     }),
     { name: "weibo_status" }
   );
-  api.logger.info?.("weibo_status: Registered weibo_status tool");
 }

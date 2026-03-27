@@ -4,7 +4,6 @@
         "weibo"
     ],
     "skills": ["./skills"],
-    "allow": "weibo-openclaw-plugin",
     "configSchema": {
         "type": "object",
         "additionalProperties": false,

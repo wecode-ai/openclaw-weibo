@@ -1,4 +1,4 @@
-import type { ClawdbotConfig } from "openclaw/plugin-sdk";
+import type { OpenClawConfig } from "openclaw/plugin-sdk/core";
 import type { WeiboConfig, ResolvedWeiboAccount } from "./types.js";
 
 const DEFAULT_ACCOUNT_ID = "default";
@@ -20,7 +20,7 @@ export function resolveWeiboAccount({
   cfg,
   accountId = DEFAULT_ACCOUNT_ID,
 }: {
-  cfg: ClawdbotConfig;
+  cfg: OpenClawConfig;
   accountId?: string;
 }): ResolvedWeiboAccount {
   const weiboCfg = cfg.channels?.weibo as WeiboConfig | undefined;
@@ -112,7 +112,7 @@ export function resolveWeiboAccount({
   };
 }
 
-export function listWeiboAccountIds(cfg: ClawdbotConfig): string[] {
+export function listWeiboAccountIds(cfg: OpenClawConfig): string[] {
   const weiboCfg = cfg.channels?.weibo as WeiboConfig | undefined;
   const accounts = weiboCfg?.accounts;
   const ids = [DEFAULT_ACCOUNT_ID];
@@ -122,11 +122,11 @@ export function listWeiboAccountIds(cfg: ClawdbotConfig): string[] {
   return ids;
 }
 
-export function resolveDefaultWeiboAccountId(cfg: ClawdbotConfig): string {
+export function resolveDefaultWeiboAccountId(cfg: OpenClawConfig): string {
   return DEFAULT_ACCOUNT_ID;
 }
 
-export function listEnabledWeiboAccounts(cfg: ClawdbotConfig): ResolvedWeiboAccount[] {
+export function listEnabledWeiboAccounts(cfg: OpenClawConfig): ResolvedWeiboAccount[] {
   const ids = listWeiboAccountIds(cfg);
   return ids
     .map((id) => resolveWeiboAccount({ cfg, accountId: id }))
