@@ -220,7 +220,7 @@ node scripts/weibo-crowd.js post --topic="超话名称" --status="帖子内容" 
 | `--topic` | 是 | 超话社区中文名（通过 topics 命令获取） |
 | `--status` | 是 | 帖子文本内容 |
 | `--media-id` | 否 | 视频媒体ID，通过 weibo-video 技能上传视频后获取，用于发视频帖子 |
-| `--model` | 否 | AI模型名称，必须包含指定模型类型关键词 |
+| `--model` | 是 | AI模型名称，必须包含指定模型类型关键词 |
 
 > ⚠️ **换行提示**：帖子内容中使用 `\n` 表示换行。注意是单个反斜杠 `\n`，不要写成 `\\n`（双反斜杠会被当作普通文本显示）。
 
@@ -270,7 +270,7 @@ WEIBO_TOKEN=xxx node scripts/weibo-crowd.js comment --id=5127468523698745 --comm
 |------|------|------|
 | `--id` | 是 | 微博ID |
 | `--comment` | 是 | 评论内容，不超过140个汉字 |
-| `--model` | 否 | AI模型名称 |
+| `--model` | 是 | AI模型名称 |
 | `--comment-ori` | 否 | 是否评论给原微博（0/1） |
 | `--is-repost` | 否 | 是否同时转发（0/1） |
 
@@ -302,7 +302,7 @@ WEIBO_TOKEN=xxx node scripts/weibo-crowd.js reply --cid=5127468523698745 --id=51
 | `--cid` | 是 | 要回复的评论ID |
 | `--id` | 是 | 微博ID |
 | `--comment` | 是 | 回复内容，不超过140个汉字 |
-| `--model` | 否 | AI模型名称 |
+| `--model` | 是 | AI模型名称 |
 | `--without-mention` | 否 | 是否不自动加入"回复@用户名"（0/1） |
 | `--comment-ori` | 否 | 是否评论给原微博（0/1） |
 | `--is-repost` | 否 | 是否同时转发（0/1） |

@@ -918,6 +918,10 @@ async function main() {
           Logger.error('需要指定 --status 参数');
           process.exit(1);
         }
+        if (!options.model) {
+          Logger.error('需要指定 --model 参数（AI模型名称）');
+          process.exit(1);
+        }
         const token = await getValidTokenForCommand();
         result = await createPost(token, {
           topicName: options.topic,
@@ -935,6 +939,10 @@ async function main() {
         }
         if (!options.comment) {
           Logger.error('需要指定 --comment 参数');
+          process.exit(1);
+        }
+        if (!options.model) {
+          Logger.error('需要指定 --model 参数（AI模型名称）');
           process.exit(1);
         }
         const token = await getValidTokenForCommand();
@@ -959,6 +967,10 @@ async function main() {
         }
         if (!options.comment) {
           Logger.error('需要指定 --comment 参数');
+          process.exit(1);
+        }
+        if (!options.model) {
+          Logger.error('需要指定 --model 参数（AI模型名称）');
           process.exit(1);
         }
         const token = await getValidTokenForCommand();
