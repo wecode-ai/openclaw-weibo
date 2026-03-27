@@ -12,6 +12,7 @@ import type {
 import { resolveWeiboAccount } from "./accounts.js";
 import { createWeiboOutboundStream } from "./outbound-stream.js";
 import { getWeiboRuntime } from "./runtime.js";
+import { generateWeiboMessageId, sendMessageWeibo } from "./send.js";
 
 // Simple in-memory dedup
 const processedMessages = new Set<string>();
@@ -310,7 +311,6 @@ export async function handleWeiboMessage(params: HandleWeiboMessageParams): Prom
     // Use a shared promise to prevent concurrent initialization race conditions
     if (!ensureOutboundMessageIdPromise) {
       ensureOutboundMessageIdPromise = (async () => {
-        const { generateWeiboMessageId } = await import("./send.js");
         currentOutboundMessageId = generateWeiboMessageId();
         currentOutboundChunkId = 0;
         return currentOutboundMessageId;
@@ -335,7 +335,6 @@ export async function handleWeiboMessage(params: HandleWeiboMessageParams): Prom
       // Wait for previous sends to complete before proceeding
       await previousTail;
 
-      const { sendMessageWeibo } = await import("./send.js");
       const outboundMessageId = await ensureOutboundMessageId();
       const chunkIdForThisSend = currentOutboundChunkId;
       currentOutboundChunkId += 1;

@@ -17,7 +17,7 @@ import { execSync, spawn } from 'child_process';
 const PACKAGE_NAME = '@wecode-ai/weibo-openclaw-plugin';
 const PLUGIN_NAME = 'weibo-openclaw-plugin';
 const VERSION_THRESHOLD = '2026.3.23';
-const LEGACY_VERSION = '2.0.0';
+const LEGACY_VERSION = '2.0.1';
 
 /**
  * 比较两个版本号

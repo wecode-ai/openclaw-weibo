@@ -8,6 +8,7 @@ import {
 import { weiboOutbound } from "./outbound.js";
 import { normalizeWeiboTarget, looksLikeWeiboId } from "./targets.js";
 import { sendMessageWeibo } from "./send.js";
+import { monitorWeiboProvider } from "./monitor.js";
 
 const DEFAULT_ACCOUNT_ID = "default";
 const PAIRING_APPROVED_MESSAGE = "✓ You have been approved to chat with this agent.";
@@ -359,7 +360,6 @@ export const weiboPlugin: ChannelPlugin<ResolvedWeiboAccount> = {
 
   gateway: {
     startAccount: async (ctx) => {
-      const { monitorWeiboProvider } = await import("./monitor.js");
       ctx.setStatus({
         accountId: ctx.accountId,
         port: null,
