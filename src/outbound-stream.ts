@@ -206,9 +206,7 @@ export function createWeiboOutboundStream(params: CreateWeiboOutboundStreamParam
       }
 
       if (hasSeenPartial) {
-        if (text.length > 0) {
-          await this.pushPartialSnapshot(text);
-        }
+        // Skip text processing - partial stream already sent all content
         await finalizeWithDoneMarker("deliver");
         return;
       }
