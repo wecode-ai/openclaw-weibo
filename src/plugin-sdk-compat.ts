@@ -1,5 +1,3 @@
-import * as pluginSdk from "openclaw/plugin-sdk";
-
 export type MediaItem = {
   path: string;
   contentType?: string | null;
@@ -12,12 +10,6 @@ export type AgentMediaPayload = {
   MediaTypes?: string[];
   MediaUrl?: string;
   MediaUrls?: string[];
-};
-
-type PluginSdkCompat = {
-  buildAgentMediaPayload?: (mediaList: MediaItem[]) => AgentMediaPayload;
-  buildMediaPayload?: (mediaList: MediaItem[]) => AgentMediaPayload;
-  waitUntilAbort?: (abortSignal?: AbortSignal) => Promise<void>;
 };
 
 function buildAgentMediaPayloadFallback(mediaList: MediaItem[]): AgentMediaPayload {
@@ -57,26 +49,12 @@ function waitUntilAbortFallback(abortSignal?: AbortSignal): Promise<void> {
 
 export function buildAgentMediaPayloadCompat(
   mediaList: MediaItem[],
-  sdk: PluginSdkCompat = pluginSdk as PluginSdkCompat,
 ): AgentMediaPayload {
-  if (typeof sdk.buildAgentMediaPayload === "function") {
-    return sdk.buildAgentMediaPayload(mediaList);
-  }
-
-  if (typeof sdk.buildMediaPayload === "function") {
-    return sdk.buildMediaPayload(mediaList);
-  }
-
   return buildAgentMediaPayloadFallback(mediaList);
 }
 
 export function waitUntilAbortCompat(
-  abortSignal?: AbortSignal,
-  sdk: PluginSdkCompat = pluginSdk as PluginSdkCompat,
+  abortSignal?: AbortSignal
 ): Promise<void> {
-  if (typeof sdk.waitUntilAbort === "function") {
-    return sdk.waitUntilAbort(abortSignal);
-  }
-
   return waitUntilAbortFallback(abortSignal);
 }

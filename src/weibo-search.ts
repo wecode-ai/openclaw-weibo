@@ -1,4 +1,4 @@
-import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk/core";
 import { WeiboSearchSchema, type WeiboSearchParams } from "./search-schema.js";
 import { getValidWeiboToken, getWeiboTokenConfig } from "./weibo-token-tool.js";
 
@@ -245,5 +245,4 @@ export function registerWeiboSearchTools(api: OpenClawPluginApi) {
     }),
     { name: "weibo_search" }
   );
-  api.logger.info?.("weibo_search: Registered weibo_search tool");
 }

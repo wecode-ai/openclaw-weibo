@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { ClawdbotConfig } from "openclaw/plugin-sdk";
+import type { OpenClawConfig } from "openclaw/plugin-sdk/core";
 import { handleWeiboMessage } from "../bot.js";
 
 const resolveWeiboAccountMock = vi.hoisted(() => vi.fn());
@@ -83,7 +83,7 @@ describe("handleWeiboMessage media pipeline", () => {
 
   it("saves input_image and input_file parts and exposes media payload fields", async () => {
     await handleWeiboMessage({
-      cfg: {} as ClawdbotConfig,
+      cfg: {} as OpenClawConfig,
       accountId: "default",
       event: {
         type: "message",
@@ -156,7 +156,7 @@ describe("handleWeiboMessage media pipeline", () => {
 
   it("accepts image-only input without dropping the message", async () => {
     const result = await handleWeiboMessage({
-      cfg: {} as ClawdbotConfig,
+      cfg: {} as OpenClawConfig,
       accountId: "default",
       event: {
         type: "message",
@@ -203,7 +203,7 @@ describe("handleWeiboMessage media pipeline", () => {
 
   it("derives a stable fallback id when inbound messageId is blank", async () => {
     const first = await handleWeiboMessage({
-      cfg: {} as ClawdbotConfig,
+      cfg: {} as OpenClawConfig,
       accountId: "default",
       event: {
         type: "message",
@@ -221,7 +221,7 @@ describe("handleWeiboMessage media pipeline", () => {
     });
 
     const second = await handleWeiboMessage({
-      cfg: {} as ClawdbotConfig,
+      cfg: {} as OpenClawConfig,
       accountId: "default",
       event: {
         type: "message",

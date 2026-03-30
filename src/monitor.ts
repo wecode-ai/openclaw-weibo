@@ -1,4 +1,5 @@
-import type { ClawdbotConfig, RuntimeEnv } from "openclaw/plugin-sdk";
+import type { OpenClawConfig } from "openclaw/plugin-sdk/core";
+import type { RuntimeEnv } from "openclaw/plugin-sdk/runtime-env";
 import type { ResolvedWeiboAccount, WeiboRuntimeStatusPatch } from "./types.js";
 import { resolveWeiboAccount, listEnabledWeiboAccounts } from "./accounts.js";
 import { clearClientCache, createWeiboClient, WeiboWebSocketClient } from "./client.js";
@@ -7,7 +8,7 @@ import { handleWeiboMessage, type WeiboMessageEvent } from "./bot.js";
 import { waitUntilAbortCompat } from "./plugin-sdk-compat.js";
 
 export type MonitorWeiboOpts = {
-  config?: ClawdbotConfig;
+  config?: OpenClawConfig;
   runtime?: RuntimeEnv;
   abortSignal?: AbortSignal;
   accountId?: string;
@@ -18,7 +19,7 @@ export type MonitorWeiboOpts = {
 const wsClients = new Map<string, WeiboWebSocketClient>();
 
 async function monitorSingleAccount(params: {
-  cfg: ClawdbotConfig;
+  cfg: OpenClawConfig;
   account: ResolvedWeiboAccount;
   runtime?: RuntimeEnv;
   abortSignal?: AbortSignal;

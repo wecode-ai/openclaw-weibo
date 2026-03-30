@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import type { ClawdbotConfig, RuntimeEnv } from "openclaw/plugin-sdk";
+import type { OpenClawConfig } from "openclaw/plugin-sdk/core";
+import type { RuntimeEnv } from "openclaw/plugin-sdk/runtime-env";
 import { monitorWeiboProvider } from "../monitor.js";
 
 const resolveWeiboAccountMock = vi.hoisted(() => vi.fn());
@@ -91,7 +92,7 @@ describe("monitorWeiboProvider", () => {
 
     const controller = new AbortController();
     const promise = monitorWeiboProvider({
-      config: {} as ClawdbotConfig,
+      config: {} as OpenClawConfig,
       runtime: makeRuntime(),
       abortSignal: controller.signal,
       accountId: "default",
@@ -124,7 +125,7 @@ describe("monitorWeiboProvider", () => {
 
     const controller = new AbortController();
     const promise = monitorWeiboProvider({
-      config: {} as ClawdbotConfig,
+      config: {} as OpenClawConfig,
       runtime: makeRuntime(),
       abortSignal: controller.signal,
       accountId: "default",
@@ -162,7 +163,7 @@ describe("monitorWeiboProvider", () => {
 
     const controller = new AbortController();
     const promise = monitorWeiboProvider({
-      config: {} as ClawdbotConfig,
+      config: {} as OpenClawConfig,
       runtime: makeRuntime(),
       abortSignal: controller.signal,
       accountId: "default",

@@ -1,14 +1,13 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { buildAgentMediaPayloadCompat, waitUntilAbortCompat } from "../plugin-sdk-compat.js";
 
 describe("plugin-sdk compatibility helpers", () => {
-  it("falls back to local media payload builder when sdk helper is missing", () => {
+  it("builds media payload from media list", () => {
     const payload = buildAgentMediaPayloadCompat(
       [
         { path: "/tmp/inbound/image.png", contentType: "image/png" },
         { path: "/tmp/inbound/doc.txt", contentType: "text/plain" },
       ],
-      {},
     );
 
     expect(payload).toEqual({
@@ -21,25 +20,33 @@ describe("plugin-sdk compatibility helpers", () => {
     });
   });
 
-  it("delegates media payload building to sdk helper when available", () => {
-    const buildAgentMediaPayload = vi.fn(() => ({ MediaPath: "/sdk/path" }));
-
-    const payload = buildAgentMediaPayloadCompat(
-      [{ path: "/tmp/inbound/image.png", contentType: "image/png" }],
-      { buildAgentMediaPayload },
-    );
-
-    expect(buildAgentMediaPayload).toHaveBeenCalledWith([
-      { path: "/tmp/inbound/image.png", contentType: "image/png" },
-    ]);
-    expect(payload).toEqual({ MediaPath: "/sdk/path" });
+  it("returns empty payload for empty media list", () => {
+    const payload = buildAgentMediaPayloadCompat([]);
+    expect(payload).toEqual({});
   });
 
-  it("waits for abort when sdk wait helper is missing", async () => {
+  it("filters out invalid media items", () => {
+    const payload = buildAgentMediaPayloadCompat([
+      { path: "", contentType: "image/png" },
+      { path: "/tmp/valid.png", contentType: "image/png" },
+      { path: "   ", contentType: "text/plain" },
+    ]);
+
+    expect(payload).toEqual({
+      MediaPath: "/tmp/valid.png",
+      MediaPaths: ["/tmp/valid.png"],
+      MediaUrl: "/tmp/valid.png",
+      MediaUrls: ["/tmp/valid.png"],
+      MediaType: "image/png",
+      MediaTypes: ["image/png"],
+    });
+  });
+
+  it("waits for abort signal", async () => {
     const controller = new AbortController();
     let settled = false;
 
-    const waiting = waitUntilAbortCompat(controller.signal, {}).then(() => {
+    const waiting = waitUntilAbortCompat(controller.signal).then(() => {
       settled = true;
     });
 
@@ -51,11 +58,11 @@ describe("plugin-sdk compatibility helpers", () => {
     expect(settled).toBe(true);
   });
 
-  it("delegates wait behavior to sdk helper when available", async () => {
-    const waitUntilAbort = vi.fn(async () => undefined);
+  it("resolves immediately when signal is already aborted", async () => {
+    const controller = new AbortController();
+    controller.abort();
 
-    await waitUntilAbortCompat(undefined, { waitUntilAbort });
-
-    expect(waitUntilAbort).toHaveBeenCalledWith(undefined);
+    await waitUntilAbortCompat(controller.signal);
+    // Should resolve without hanging
   });
 });

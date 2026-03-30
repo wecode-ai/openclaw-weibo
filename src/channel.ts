@@ -1,4 +1,4 @@
-import type { ChannelPlugin, ClawdbotConfig } from "openclaw/plugin-sdk";
+import type { ChannelPlugin, OpenClawConfig } from "openclaw/plugin-sdk/core";
 import type { ResolvedWeiboAccount, WeiboConfig } from "./types.js";
 import {
   resolveWeiboAccount,
@@ -8,6 +8,7 @@ import {
 import { weiboOutbound } from "./outbound.js";
 import { normalizeWeiboTarget, looksLikeWeiboId } from "./targets.js";
 import { sendMessageWeibo } from "./send.js";
+import { monitorWeiboProvider } from "./monitor.js";
 
 const DEFAULT_ACCOUNT_ID = "default";
 const PAIRING_APPROVED_MESSAGE = "✓ You have been approved to chat with this agent.";
@@ -91,16 +92,16 @@ export const weiboPlugin: ChannelPlugin<ResolvedWeiboAccount> = {
   },
 
   config: {
-    listAccountIds: (cfg: ClawdbotConfig) => listWeiboAccountIds(cfg),
-    resolveAccount: (cfg: ClawdbotConfig, accountId?: string | null) =>
+    listAccountIds: (cfg: OpenClawConfig) => listWeiboAccountIds(cfg),
+    resolveAccount: (cfg: OpenClawConfig, accountId?: string | null) =>
       resolveWeiboAccount({ cfg, accountId: accountId ?? DEFAULT_ACCOUNT_ID }),
-    defaultAccountId: (cfg: ClawdbotConfig) => resolveDefaultWeiboAccountId(cfg),
+    defaultAccountId: (cfg: OpenClawConfig) => resolveDefaultWeiboAccountId(cfg),
     setAccountEnabled: ({
       cfg,
       accountId,
       enabled,
     }: {
-      cfg: ClawdbotConfig;
+      cfg: OpenClawConfig;
       accountId: string;
       enabled: boolean;
     }) => {
@@ -141,13 +142,13 @@ export const weiboPlugin: ChannelPlugin<ResolvedWeiboAccount> = {
       cfg,
       accountId,
     }: {
-      cfg: ClawdbotConfig;
+      cfg: OpenClawConfig;
       accountId: string;
     }) => {
       const isDefault = accountId === DEFAULT_ACCOUNT_ID;
 
       if (isDefault) {
-        const next = { ...cfg } as ClawdbotConfig;
+        const next = { ...cfg } as OpenClawConfig;
         const nextChannels = { ...cfg.channels };
         delete (nextChannels as Record<string, unknown>).weibo;
         if (Object.keys(nextChannels).length > 0) {
@@ -185,7 +186,7 @@ export const weiboPlugin: ChannelPlugin<ResolvedWeiboAccount> = {
       cfg,
       accountId,
     }: {
-      cfg: ClawdbotConfig;
+      cfg: OpenClawConfig;
       accountId?: string | null;
     }) => {
       const account = resolveWeiboAccount({ cfg, accountId: accountId ?? DEFAULT_ACCOUNT_ID });
@@ -196,7 +197,7 @@ export const weiboPlugin: ChannelPlugin<ResolvedWeiboAccount> = {
     formatAllowFrom: ({
       allowFrom,
     }: {
-      cfg: ClawdbotConfig;
+      cfg: OpenClawConfig;
       accountId?: string | null;
       allowFrom: (string | number)[];
     }) =>
@@ -215,7 +216,7 @@ export const weiboPlugin: ChannelPlugin<ResolvedWeiboAccount> = {
       cfg,
       accountId,
     }: {
-      cfg: ClawdbotConfig;
+      cfg: OpenClawConfig;
       accountId?: string;
     }) => {
       const isDefault = !accountId || accountId === DEFAULT_ACCOUNT_ID;
@@ -359,7 +360,6 @@ export const weiboPlugin: ChannelPlugin<ResolvedWeiboAccount> = {
 
   gateway: {
     startAccount: async (ctx) => {
-      const { monitorWeiboProvider } = await import("./monitor.js");
       ctx.setStatus({
         accountId: ctx.accountId,
         port: null,

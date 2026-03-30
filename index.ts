@@ -1,4 +1,4 @@
-import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk/core";
 import { weiboPlugin } from "./src/channel.js";
 import { setWeiboRuntime } from "./src/runtime.js";
 import { reconnectWeiboMonitor } from "./src/monitor.js";

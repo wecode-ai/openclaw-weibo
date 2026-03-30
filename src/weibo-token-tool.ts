@@ -1,4 +1,4 @@
-import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk/core";
 import { Type, type Static } from "@sinclair/typebox";
 
 // ============ Schema ============
@@ -227,5 +227,4 @@ export function registerWeiboTokenTools(api: OpenClawPluginApi) {
     }),
     { name: "weibo_token" }
   );
-  api.logger.info?.("weibo_token: Registered weibo_token tool");
 }

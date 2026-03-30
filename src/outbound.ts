@@ -1,7 +1,7 @@
 import type {
   ChannelOutboundAdapter,
   ChannelOutboundContext,
-} from "openclaw/plugin-sdk";
+} from "openclaw/plugin-sdk/channel-runtime";
 import { sendMessageWeibo } from "./send.js";
 
 // Simple text chunker - splits by character length

@@ -1,4 +1,4 @@
-import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk/core";
 import { Type, type Static } from "@sinclair/typebox";
 import { getValidWeiboToken, getWeiboTokenConfig } from "./weibo-token-tool.js";
 
@@ -257,5 +257,4 @@ export function registerWeiboHotSearchTools(api: OpenClawPluginApi) {
     }),
     { name: "weibo_hot_search" }
   );
-  api.logger.info?.("weibo_hot_search: Registered weibo_hot_search tool");
 }

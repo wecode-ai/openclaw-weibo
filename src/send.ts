@@ -1,11 +1,11 @@
-import type { ClawdbotConfig } from "openclaw/plugin-sdk";
+import type { OpenClawConfig } from "openclaw/plugin-sdk/core";
 import type { WeiboSendResult } from "./types.js";
 import { resolveWeiboAccount } from "./accounts.js";
 import { createWeiboClient } from "./client.js";
 import { normalizeWeiboTarget } from "./targets.js";
 
 export type SendWeiboMessageParams = {
-  cfg: ClawdbotConfig;
+  cfg: OpenClawConfig;
   to: string;
   text: string;
   accountId?: string;
