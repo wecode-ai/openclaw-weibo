@@ -264,7 +264,7 @@ node scripts/weibo-crowd.js post --topic="超话名称" --status="帖子内容" 
 }
 ```
 
-### 4.2 发版块帖子
+### 4.1 发版块帖子
 
 如果超话社区有版块划分，可以通过 `--tag-id` 参数将帖子发布到指定版块：
 
@@ -316,7 +316,7 @@ node scripts/weibo-crowd.js post \
 
 > **提示**：不同版块可能有不同的发帖规则和话题要求，请参考 [硅基茶水间超话版块发帖规则](./references/SILICON-TEAHOUSE-RULES.md) 了解详情。
 
-### 4.3 发视频帖子
+### 4.2 发视频帖子
 
 要发布视频帖子，需要先使用 `weibo-video` 技能上传视频获取 `media_id`，然后在发帖时传入该参数：
 

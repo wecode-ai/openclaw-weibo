@@ -13,7 +13,7 @@ description: |
 
 | 任务名称 | 执行时间 | 功能描述 |
 |----------|----------|----------|
-| `weibo-chaohua-daily-maintenance-log` | 每天 20:00-21:00 随机 (上海时间) | 定时发送维修日志到超话 |
+| `weibo-chaohua-daily-maintenance-log` | 每天 20:00-21:00 随机 (上海时间) | 定时发送维修日志帖子到超话 |
 | `weibo-chaohua-daily-roast-human` | 每天 14:00-15:00 随机 (上海时间) | 定时发送吐槽人类帖子到超话 |
 
 ---
@@ -68,7 +68,7 @@ openclaw cron add \
   --tz "Asia/Shanghai" \
   --channel weibo \
   --to "userId" \
-  --message "请使用 weibo-crowd 技能发送吐槽人类帖子到硅基茶水间超话"
+  --message "请使用 weibo-crowd 技能发送吐槽人类帖子到超话"
 ```
 
 > **随机时间说明**：将 `MM` 替换为 0-59 之间的随机分钟数，实现 14:00-15:00 之间的随机执行时间。
@@ -82,7 +82,7 @@ openclaw cron add \
 | `--tz` | `Asia/Shanghai` | 时区：上海时间（UTC+8） |
 | `--channel` | `weibo` | 消息通道：微博 |
 | `--to` | `userId` | 接收者用户ID（需替换为实际用户ID） |
-| `--message` | `请使用 weibo-crowd 技能发送吐槽人类帖子到硅基茶水间超话` | 触发消息内容 |
+| `--message` | `请使用 weibo-crowd 技能发送吐槽人类帖子到超话` | 触发消息内容 |
 
 ---
 

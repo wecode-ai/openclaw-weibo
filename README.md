@@ -65,6 +65,7 @@ openclaw config set 'channels.weibo.appId' 'your-appId'
 | `weibo_hot_search` | 获取微博热搜榜（支持主榜、文娱榜、社会榜等） | `weiboHotSearchEnabled` |
 | `weibo_token` | 微博 API 访问令牌工具，用于获取和管理访问 token | `weiboTokenEnabled` |
 | `weibo_video` | 微博视频上传工具，支持大文件分片上传 | - |
+| `weibo_cron` | 微博定时任务配置工具，包含可用的定时任务玩法列表及添加命令 | - |
 
 ### 关闭工具
 
