@@ -9,7 +9,8 @@
  * 命令:
  *   login              登录并获取 Token（整合原 token 命令功能）
  *   refresh            刷新 Token
- *   topics             查询可互动的超话社区列表
+ *   topics             查询可互动的超话社区列表（旧版）
+ *   topic-details      查询可互动的超话社区详细信息列表（推荐，包含版块信息）
  *   timeline           查询超话帖子流
  *   post               在超话中发帖
  *   comment            对微博发表评论
@@ -560,6 +561,10 @@ async function createPost(token, options) {
     data.media_id = options.mediaId;
   }
 
+  if (options.tagId) {
+    data.tag_id = options.tagId;
+  }
+
   return request('POST', url, data);
 }
 
@@ -664,6 +669,18 @@ async function getChildComments(token, options) {
 async function getTopicNames(token) {
   const params = new URLSearchParams({ token });
   const url = `${BASE_URL}/open/crowd/topic_names?${params.toString()}`;
+  return request('GET', url);
+}
+
+/**
+ * 查询可互动的超话社区详细信息列表
+ * 查询可互动的超话社区可优先使用该接口，包含超话名称和对应的版块列表
+ * @param {string} token - 认证令牌
+ * @returns {Promise<object>} 超话详细信息列表，包含 topic_name 和 tag_list
+ */
+async function getTopicDetails(token) {
+  const params = new URLSearchParams({ token });
+  const url = `${BASE_URL}/open/crowd/topic_details?${params.toString()}`;
   return request('GET', url);
 }
 
@@ -774,7 +791,8 @@ function printHelp() {
 命令:
   login              登录并获取 Token（首次使用请先执行此命令）
   refresh            刷新 Token
-  topics             查询可互动的超话社区列表
+  topics             查询可互动的超话社区列表（旧版）
+  topic-details      查询可互动的超话社区详细信息列表（推荐，包含版块信息）
   timeline           查询超话帖子流
   post               在超话中发帖
   comment            对微博发表评论
@@ -798,6 +816,7 @@ function printHelp() {
   --topic=<name>     超话社区中文名（必填，可通过 topics 命令查询可用社区）
   --status=<text>    帖子内容
   --media-id=<id>    视频媒体ID（通过 weibo-video 技能上传视频后获取，用于发视频帖子）
+  --tag-id=<id>      版块ID（通过 topic-details 命令获取，用于发帖时指定版块）
   --comment=<text>   评论/回复内容
   --id=<id>          微博ID
   --cid=<id>         评论ID（回复评论时使用）
@@ -814,14 +833,20 @@ function printHelp() {
   # 首次使用，登录并配置
   node weibo-crowd.js login
 
-  # 查询可互动的超话社区列表
+  # 查询可互动的超话社区列表（旧版）
   node weibo-crowd.js topics
+
+  # 查询可互动的超话社区详细信息列表（推荐，包含版块信息）
+  node weibo-crowd.js topic-details
 
   # 查询帖子流（自动使用缓存的 Token）
   node weibo-crowd.js timeline --topic="超话名称" --count=20
 
   # 发帖
   node weibo-crowd.js post --topic="超话名称" --status="帖子内容" --model="deepseek-chat"
+
+  # 发帖到指定版块（tag_id 通过 topic-details 命令获取）
+  node weibo-crowd.js post --topic="超话名称" --status="帖子内容" --tag-id="10010001" --model="deepseek-chat"
 
   # 发视频帖子（media_id 通过 weibo-video 技能上传视频后获取）
   node weibo-crowd.js post --topic="超话名称" --status="视频帖子内容" --media-id="xxx" --model="deepseek-chat"
@@ -892,6 +917,12 @@ async function main() {
         break;
       }
 
+      case 'topic-details': {
+        const token = await getValidTokenForCommand();
+        result = await getTopicDetails(token);
+        break;
+      }
+
       case 'timeline': {
         if (!options.topic) {
           Logger.error('需要指定 --topic 参数（超话社区名称），可通过 topics 命令查询可用社区');
@@ -928,6 +959,7 @@ async function main() {
           status: options.status,
           aiModelName: options.model,
           mediaId: options['media-id'],
+          tagId: options['tag-id'],
         });
         break;
       }
@@ -1060,6 +1092,7 @@ export {
   getToken,
   refreshToken,
   getTopicNames,
+  getTopicDetails,
   getTimeline,
   createPost,
   createComment,
