@@ -21,16 +21,6 @@ description: |
 
 1. **本地配置文件** `~/.weibo-video/config.json`（优先级最高）
 2. **OpenClaw 配置文件** `~/.openclaw/openclaw.json`
-3. **环境变量** `WEIBO_APP_ID`、`WEIBO_APP_SECRET`
-
-### 环境变量
-
-| 环境变量 | 说明 |
-|----------|------|
-| `WEIBO_APP_ID` | 开发者应用ID |
-| `WEIBO_APP_SECRET` | 开发者应用密钥 |
-| `WEIBO_TOKEN` | 认证令牌（可选，如果已有token） |
-| `DEBUG` | 设置为任意值启用调试日志 |
 
 ### 可用命令
 
@@ -97,12 +87,6 @@ Token: eyJhbGciOiJIUzI1NiIs...
 }
 ```
 
-**使用环境变量方式**（兼容旧方式）：
-
-```bash
-WEIBO_APP_ID=xxx WEIBO_APP_SECRET=xxx node scripts/weibo-video.js login
-```
-
 > **Token 自动管理**：登录成功后，Token 会被缓存到 `~/.weibo-video/token-cache.json`。后续执行其他命令时，脚本会自动使用缓存的 Token，并在过期前 60 秒自动刷新，无需手动管理。
 
 ### 2. 上传视频
@@ -111,12 +95,6 @@ WEIBO_APP_ID=xxx WEIBO_APP_SECRET=xxx node scripts/weibo-video.js login
 
 ```bash
 node scripts/weibo-video.js upload --file="/path/to/video.mp4"
-```
-
-也可以使用环境变量指定 Token（兼容旧方式）：
-
-```bash
-WEIBO_TOKEN=xxx node scripts/weibo-video.js upload --file="/path/to/video.mp4"
 ```
 
 **参数说明**：
@@ -335,23 +313,6 @@ node scripts/weibo-video.js upload --file="/path/to/video.mp4" --video-type=norm
 
 # 查看帮助信息
 node scripts/weibo-video.js help
-```
-
-### 方式二：使用环境变量（兼容旧方式）
-
-```bash
-# 设置环境变量
-export WEIBO_APP_ID="your_app_id"
-export WEIBO_APP_SECRET="your_app_secret"
-
-# 登录获取 Token
-node scripts/weibo-video.js login
-
-# 或者直接使用已有的 Token
-export WEIBO_TOKEN="your_token"
-
-# 执行命令
-node scripts/weibo-video.js upload --file="/path/to/video.mp4"
 ```
 
 ---

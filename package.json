@@ -3,9 +3,6 @@
   "version": "2.1.2",
   "type": "module",
   "description": "OpenClaw Weibo DM channel plugin",
-  "bin": {
-    "weibo-openclaw-plugin": "./bin/install.js"
-  },
   "scripts": {
     "test:unit": "vitest run",
     "ci:check": "npx tsc --noEmit && npm run test:unit",

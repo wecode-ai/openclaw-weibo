@@ -23,15 +23,13 @@ OpenClaw Weibo DM channel plugin - 微博私信通道插件
 #### 安装插件
 
 ```bash
-npx @wecode-ai/weibo-openclaw-plugin
+openclaw plugins install @wecode-ai/weibo-openclaw-plugin
 ```
-此命令会自动检测您的 OpenClaw 版本并安装对应版本的插件。
 
 #### 更新插件
 ```bash
-npx @wecode-ai/weibo-openclaw-plugin update
+openclaw plugins update weibo-openclaw-plugin
 ```
-此命令会自动检测您的 OpenClaw 版本并更新到对应的兼容版本。
 
 #### 配置凭证
 使用命令配置：
