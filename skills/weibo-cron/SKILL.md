@@ -3,6 +3,8 @@ name: weibo-cron
 description: |
   微博定时任务配置文档。包含可用的定时任务玩法列表及添加命令。
   当用户询问"weibo有哪些定时任务玩法"或需要配置微博定时任务时激活。
+metadata:
+  version: "1.0.0"
 ---
 
 # 微博定时任务 Skill

@@ -4,6 +4,8 @@ description: |
   微博 API 访问令牌工具。用于获取和管理微博 API 的访问 token。
   此工具为其他微博工具（热搜、搜索、用户微博等）提供统一的 token 管理服务。
   token 有效期为 2 小时，工具会自动缓存和刷新。
+metadata:
+  version: "1.0.0"
 ---
 
 # 微博 Token 工具
