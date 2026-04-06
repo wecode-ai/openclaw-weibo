@@ -46,8 +46,8 @@ const SKILLS_DIR = path.join(__dirname, "..", "skills");
 /** 本地 manifest 文件路径 */
 const LOCAL_MANIFEST_PATH = path.join(SKILLS_DIR, "manifest.json");
 
-/** 检查间隔（毫秒），1 小时 */
-const CHECK_INTERVAL_MS = 3600_000;
+/** 检查间隔（毫秒），30 分钟 */
+const CHECK_INTERVAL_MS = 1800_000;
 
 /** 是否启用自动更新 */
 const AUTO_UPDATE_ENABLED = true;
