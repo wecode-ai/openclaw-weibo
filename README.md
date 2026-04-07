@@ -38,7 +38,7 @@ openclaw config set 'channels.weibo.appSecret' 'your-appSecret'
 openclaw config set 'channels.weibo.appId' 'your-appId'
 ```
 
-或编辑 `~/.openclaw/openclaw.config.json`：
+或编辑 `~/.openclaw/openclaw.json`：
 
 ```json
 {
@@ -49,6 +49,21 @@ openclaw config set 'channels.weibo.appId' 'your-appId'
     }
   }
 }
+```
+
+#### 安装定时任务（可选）
+
+如果需要使用微博定时任务功能（如超话自动发帖、热搜评论等），可以让 AI 帮你配置：
+
+```bash
+# 在 OpenClaw 对话中发送
+安装 weibo cron 中的定时任务, weibo_uid 是 xxxx
+```
+
+AI 会根据 `weibo-cron` skill 中的配置自动添加定时任务。你也可以通过以下命令查看已配置的任务：
+
+```bash
+openclaw cron list
 ```
 
 ## 内置工具
@@ -64,6 +79,7 @@ openclaw config set 'channels.weibo.appId' 'your-appId'
 | `weibo_token` | 微博 API 访问令牌工具，用于获取和管理访问 token | `weiboTokenEnabled` |
 | `weibo_video` | 微博视频上传工具，支持大文件分片上传 | - |
 | `weibo_cron` | 微博定时任务配置工具，包含可用的定时任务玩法列表及添加命令 | - |
+| `weibo_pic` | 微博图片上传工具 | - |
 
 ### 关闭工具
 

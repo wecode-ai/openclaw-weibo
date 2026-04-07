@@ -836,8 +836,8 @@ function printHelp() {
   reply              回复评论
   comments           查询评论列表（一级评论和子评论）
   child-comments     查询子评论
-  comments-to-me     查询收到的评论
-  comments-by-me     查询发出的评论
+  comments-to-me     查询我收到的评论
+  comments-by-me     查询我发出的评论
   help               显示帮助信息
 
 配置优先级:
@@ -899,10 +899,10 @@ function printHelp() {
   # 查询子评论
   node weibo-crowd.js child-comments --id=5127468523698745 --count=20
 
-  # 查询收到的评论
+  # 查询我收到的评论
   node weibo-crowd.js comments-to-me --page=1 --count=20
 
-  # 查询发出的评论
+  # 查询我发出的评论
   node weibo-crowd.js comments-by-me --page=1 --count=20
 `);
 }
