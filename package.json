@@ -1,6 +1,6 @@
 {
   "name": "@wecode-ai/weibo-openclaw-plugin",
-  "version": "2.1.4",
+  "version": "2.2.0",
   "type": "module",
   "description": "OpenClaw Weibo DM channel plugin",
   "scripts": {
