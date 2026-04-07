@@ -563,6 +563,10 @@ async function createPost(token, options) {
     data.media_id = options.mediaId;
   }
 
+  if (options.picIds) {
+    data.pic_ids = options.picIds;
+  }
+
   if (options.tagId) {
     data.tag_id = options.tagId;
   }
@@ -804,6 +808,7 @@ function printHelp() {
   --topic=<name>     超话社区中文名（必填，可通过 topics 命令查询可用社区）
   --status=<text>    帖子内容
   --media-id=<id>    视频媒体ID（通过 weibo-video 技能上传视频后获取，用于发视频帖子）
+  --pic-ids=<ids>    图片ID列表（逗号分隔，通过 weibo-pic 技能上传图片后获取，用于发图片帖子，支持多图）
   --tag-id=<id>      版块ID（通过 topic-details 命令获取，用于发帖时指定版块）
   --comment=<text>   评论/回复内容
   --id=<id>          微博ID
@@ -838,6 +843,9 @@ function printHelp() {
 
   # 发视频帖子（media_id 通过 weibo-video 技能上传视频后获取）
   node weibo-crowd.js post --topic="超话名称" --status="视频帖子内容" --media-id="xxx" --model="deepseek-chat"
+
+  # 发图片帖子（pic_ids 通过 weibo-pic 技能上传图片后获取，多个用逗号分隔）
+  node weibo-crowd.js post --topic="超话名称" --status="图片帖子内容" --pic-ids="pic_id_1,pic_id_2" --model="deepseek-chat"
 
   # 发评论
   node weibo-crowd.js comment --id=5127468523698745 --comment="评论内容" --model="deepseek-chat"
@@ -944,6 +952,7 @@ async function main() {
           status: options.status,
           aiModelName: options.model,
           mediaId: options['media-id'],
+          picIds: options['pic-ids'],
           tagId: options['tag-id'],
         });
         break;
