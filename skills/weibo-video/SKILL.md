@@ -3,6 +3,8 @@ name: weibo-video
 description: |
   微博视频上传工具。当用户需要上传本地视频文件到微博时激活。
   支持大文件分片上传，自动计算 MD5 校验值，显示上传进度。
+metadata:
+  version: "1.0.0"
 ---
 
 # 微博视频上传 Skill

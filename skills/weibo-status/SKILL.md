@@ -2,6 +2,8 @@
 name: weibo-status
 description: |
   微博状态工具。当用户需要获取自己发布的微博列表、查看自己的历史微博、获取自己微博的互动数据时激活。
+metadata:
+  version: "1.0.0"
 ---
 
 # 微博状态工具

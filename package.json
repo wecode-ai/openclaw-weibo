@@ -1,18 +1,19 @@
 {
   "name": "@wecode-ai/weibo-openclaw-plugin",
-  "version": "2.1.4",
+  "version": "2.2.0",
   "type": "module",
   "description": "OpenClaw Weibo DM channel plugin",
   "scripts": {
     "test:unit": "vitest run",
     "ci:check": "npx tsc --noEmit && npm run test:unit",
-    "build": "tsc && npm run pack:prepare",
+    "build": "rm -rf dist && tsc && npm run pack:prepare",
     "pack:prepare": "node scripts/prepare-pack.js",
     "pack": "npm run build && cd dist && npm pack",
     "release": "npm run build && cd dist && npm publish --access public --registry=https://registry.npmjs.org/",
     "release:beta": "npm version prerelease --preid=beta --no-git-tag-version && npm run build && npm publish ./dist --tag beta --access public --registry=https://registry.npmjs.org/",
     "dev": "tsx",
-    "sim:server": "tsx weibo-server.ts"
+    "sim:server": "tsx weibo-server.ts",
+    "skills:pack": "node scripts/pack-skills.js"
   },
   "license": "MIT",
   "openclaw": {
@@ -31,16 +32,19 @@
   },
   "dependencies": {
     "@sinclair/typebox": "0.34.48",
+    "tar": "^7.0.0",
     "ws": "^8.18.0",
     "zod": "^4.3.6"
   },
   "bundledDependencies": [
     "@sinclair/typebox",
+    "tar",
     "ws",
     "zod"
   ],
   "devDependencies": {
     "@types/node": "^25.0.10",
+    "@types/tar": "^6.1.11",
     "@types/ws": "^8.5.14",
     "@vitest/coverage-v8": "^2.1.8",
     "openclaw": "^2026.3.23",

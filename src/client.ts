@@ -12,6 +12,7 @@ import {
   isRetryableWeiboTokenFetchError,
 } from "./token.js";
 import { getWeiboConnectionFingerprint } from "./fingerprint.js";
+import { triggerSkillUpdateIfNeeded } from "./skill-updater.js";
 
 export type WebSocketMessageHandler = (data: unknown) => void;
 export type WebSocketErrorHandler = (error: Error) => void;
@@ -251,6 +252,9 @@ export class WeiboWebSocketClient {
             err
           );
         }
+
+        // 触发 skill 更新检查（异步，不阻塞心跳）
+        triggerSkillUpdateIfNeeded();
       }
     }, PING_INTERVAL_MS);
   }

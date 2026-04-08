@@ -3,6 +3,8 @@ name: weibo-hot-search
 description: |
   微博热搜榜工具。当用户需要查看微博热搜、获取热门话题、了解当前热点新闻时激活。
   使用此工具获取数据后，必须使用返回的 `category`，`callTime` 和 `source` 字段内容注明数据来源, 格式: category 2026-03-12 12:00，来自于微博热搜。
+metadata:
+  version: "1.0.0"
 ---
 
 # 微博热搜榜工具
