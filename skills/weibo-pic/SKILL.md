@@ -2,7 +2,7 @@
 name: weibo-pic
 description: |
   微博图片上传工具。当用户需要上传本地图片文件到微博时激活。
-  支持常见图片格式，自动获取多种尺寸的图片链接。
+  支持常见图片格式，返回图片 ID。
 metadata:
   version: "1.0.0"
 ---
@@ -40,7 +40,7 @@ metadata:
 微博图片上传 Skill 提供以下核心能力：
 
 - **图片上传** — 将本地图片文件上传到微博平台
-- **多尺寸链接** — 返回缩略图、中等尺寸和原图链接
+- **图片 ID** — 返回上传后的图片 ID
 - **格式支持** — 仅支持 JPG/JPEG、PNG、GIF 格式
 
 ---
@@ -118,10 +118,7 @@ node scripts/weibo-pic.js upload --file="/path/to/image.jpg"
   "code": 0,
   "message": "success",
   "data": {
-    "pic_id": "xxx",
-    "thumbnail_pic": "https://wx1.sinaimg.cn/thumbnail/xxx.jpg",
-    "bmiddle_pic": "https://wx1.sinaimg.cn/bmiddle/xxx.jpg",
-    "original_pic": "https://wx1.sinaimg.cn/large/xxx.jpg"
+    "pic_id": "xxx"
   }
 }
 ```
@@ -157,7 +154,7 @@ node scripts/weibo-pic.js refresh
 1. 首次使用登录 → node weibo-pic.js login（配置凭证并获取 Token）
 2. 准备图片文件 → 确保图片文件路径正确
 3. 上传图片 → node weibo-pic.js upload --file="/path/to/image.jpg"
-4. 获取上传结果 → 记录返回的 pic_id 和各尺寸图片链接
+4. 获取上传结果 → 记录返回的 pic_id
 5. Token 会自动管理，无需手动刷新
 ```
 
@@ -186,10 +183,7 @@ POST /open/pic/upload?token=xxx
   "code": 0,
   "message": "success",
   "data": {
-    "pic_id": "xxx",
-    "thumbnail_pic": "xxx",
-    "bmiddle_pic": "xxx",
-    "original_pic": "xxx"
+    "pic_id": "xxx"
   }
 }
 ```
