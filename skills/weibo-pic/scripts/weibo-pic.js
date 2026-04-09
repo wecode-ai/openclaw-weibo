@@ -1,45 +1,33 @@
 #!/usr/bin/env node
 
 /**
- * 微博超话 API 封装脚本
+ * 微博图片上传 API 封装脚本
  *
  * 使用方法:
- *   node weibo-crowd.js <command> [options]
+ *   node weibo-pic.js <command> [options]
  *
  * 命令:
  *   login              登录并获取 Token（整合原 token 命令功能）
  *   refresh            刷新 Token
- *   topics             查询可互动的超话社区列表（旧版）
- *   topic-details      查询可互动的超话社区详细信息列表（推荐，包含版块信息）
- *   timeline           查询超话帖子流
- *   post               在超话中发帖
- *   comment            对微博发表评论
- *   reply              回复评论
- *   comments           查询评论列表（一级评论和子评论）
- *   child-comments     查询子评论
+ *   upload             上传本地图片文件
  *
  * 配置优先级:
- *   1. 本地配置文件 ~/.weibo-crowd/config.json
+ *   1. 本地配置文件 ~/.weibo-pic/config.json
  *   2. OpenClaw 配置文件 ~/.openclaw/openclaw.json
  *
  * 示例:
  *   # 登录（首次使用会引导配置）
- *   node weibo-crowd.js login
+ *   node weibo-pic.js login
  *
- *   # 查询可互动的超话社区列表
- *   node weibo-crowd.js topics
- *
- *   # 查询帖子流（自动使用缓存的 Token）
- *   node weibo-crowd.js timeline --topic="超话名称" --count=20
- *
- *   # 发帖
- *   node weibo-crowd.js post --topic="超话名称" --status="帖子内容" --model="deepseek-chat"
+ *   # 上传图片（自动使用缓存的 Token）
+ *   node weibo-pic.js upload --file="/path/to/image.jpg"
  */
 
 import https from 'https';
 import http from 'http';
 import { URL } from 'url';
 import fs from 'fs/promises';
+import { statSync } from 'fs';
 import path from 'path';
 import os from 'os';
 import crypto from 'crypto';
@@ -58,8 +46,8 @@ const BASE_URL = 'https://open-im.api.weibo.com';
 
 const CONFIG_PATHS = {
   openclaw: path.join(os.homedir(), '.openclaw', 'openclaw.json'),
-  local: path.join(os.homedir(), '.weibo-crowd', 'config.json'),
-  tokenCache: path.join(os.homedir(), '.weibo-crowd', 'token-cache.json')
+  local: path.join(os.homedir(), '.weibo-pic', 'config.json'),
+  tokenCache: path.join(os.homedir(), '.weibo-pic', 'token-cache.json')
 };
 
 // ============================================================================
@@ -92,9 +80,8 @@ class APIError extends Error {
 
 // 错误码映射
 const ERROR_MESSAGES = {
-  40001: '参数缺失：app_id、topic_name、id 或 cid',
-  40002: '参数缺失或超限：app_secret、status、comment 或 count',
-  40003: 'ai_model_name 超过 64 字符或 sort_type 参数错误',
+  40001: '参数缺失：token',
+  40002: '参数缺失或超限',
   40100: 'Token 无效或已过期，请重新登录',
   42900: '频率限制：超过每日调用次数上限，请明天再试',
   50000: '服务器内部错误，请稍后重试',
@@ -396,7 +383,7 @@ function prompt(question) {
  * @returns {Promise<object>} 配置对象
  */
 async function interactiveConfig() {
-  console.log('\n=== 微博超话配置向导 ===\n');
+  console.log('\n=== 微博图片上传配置向导 ===\n');
   console.log('请输入您的微博应用凭证信息。');
   console.log('如果您还没有凭证，请私信 @微博龙虾助手 发送 "连接龙虾" 获取。\n');
 
@@ -470,18 +457,51 @@ function request(method, url, data = null) {
 }
 
 /**
- * 处理 API 响应错误
- * @param {object} result - API 响应
- * @returns {object} 原始响应（如果成功）
- * @throws {APIError} 如果响应包含错误
+ * 发送带二进制数据的 HTTP 请求
+ * @param {string} url - 请求 URL
+ * @param {Buffer} data - 二进制数据
+ * @returns {Promise<object>} 响应数据
  */
-function handleAPIError(result) {
-  if (result.code === 0) return result;
-  
-  const message = ERROR_MESSAGES[result.code] || result.message || '未知错误';
-  const retryable = RETRYABLE_ERRORS.has(result.code);
-  
-  throw new APIError(message, result.code, retryable);
+function requestWithBinary(url, data) {
+  return new Promise((resolve, reject) => {
+    const urlObj = new URL(url);
+    const isHttps = urlObj.protocol === 'https:';
+    const httpModule = isHttps ? https : http;
+
+    const options = {
+      hostname: urlObj.hostname,
+      port: urlObj.port || (isHttps ? 443 : 80),
+      path: urlObj.pathname + urlObj.search,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        'Content-Length': data.length,
+        'Accept': 'application/json',
+      },
+    };
+
+    const req = httpModule.request(options, (res) => {
+      let body = '';
+      res.on('data', (chunk) => {
+        body += chunk;
+      });
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(body);
+          resolve(json);
+        } catch (e) {
+          reject(new Error(`解析响应失败: ${body}`));
+        }
+      });
+    });
+
+    req.on('error', (e) => {
+      reject(e);
+    });
+
+    req.write(data);
+    req.end();
+  });
 }
 
 // ============================================================================
@@ -515,179 +535,41 @@ async function refreshToken(token) {
 }
 
 /**
- * 查询超话帖子流
+ * 上传图片
  * @param {string} token - 认证令牌
- * @param {object} options - 查询选项
- * @returns {Promise<object>} 帖子列表
+ * @param {string} filePath - 图片文件路径
+ * @returns {Promise<object>} 上传结果
  */
-async function getTimeline(token, options = {}) {
-  if (!options.topicName) {
-    throw new Error('需要指定超话社区名称（topicName）');
-  }
-  const params = new URLSearchParams({
-    token,
-    topic_name: options.topicName,
-  });
-
-  if (options.page) params.append('page', options.page);
-  if (options.count) params.append('count', options.count);
-  if (options.sinceId) params.append('since_id', options.sinceId);
-  if (options.maxId) params.append('max_id', options.maxId);
-  if (options.sortType !== undefined) params.append('sort_type', options.sortType);
-
-  const url = `${BASE_URL}/open/crowd/timeline?${params.toString()}`;
-  return request('GET', url);
-}
-
-/**
- * 在超话中发帖
- * @param {string} token - 认证令牌
- * @param {object} options - 发帖选项
- * @returns {Promise<object>} 发帖结果
- */
-async function createPost(token, options) {
-  if (!options.topicName) {
-    throw new Error('需要指定超话社区名称（topicName）');
-  }
-  const url = `${BASE_URL}/open/crowd/post?token=${token}`;
-  const data = {
-    topic_name: options.topicName,
-    status: options.status,
-  };
-
-  if (options.aiModelName) {
-    data.ai_model_name = options.aiModelName;
-  }
-
-  if (options.mediaId) {
-    data.media_id = options.mediaId;
-  }
-
-  if (options.picIds) {
-    data.pic_ids = options.picIds;
-  }
-
-  if (options.tagId) {
-    data.tag_id = options.tagId;
-  }
-
-  return request('POST', url, data);
-}
-
-/**
- * 对微博发表评论
- * @param {string} token - 认证令牌
- * @param {object} options - 评论选项
- * @returns {Promise<object>} 评论结果
- */
-async function createComment(token, options) {
-  const url = `${BASE_URL}/open/crowd/comment?token=${token}`;
-  const data = {
-    id: options.id,
-    comment: options.comment,
-  };
-
-  if (options.aiModelName) data.ai_model_name = options.aiModelName;
-  if (options.commentOri !== undefined) data.comment_ori = options.commentOri;
-  if (options.isRepost !== undefined) data.is_repost = options.isRepost;
-
-  return request('POST', url, data);
-}
-
-/**
- * 回复评论
- * @param {string} token - 认证令牌
- * @param {object} options - 回复选项
- * @returns {Promise<object>} 回复结果
- */
-async function replyComment(token, options) {
-  const url = `${BASE_URL}/open/crowd/comment/reply?token=${token}`;
-  const data = {
-    cid: options.cid,
-    id: options.id,
-    comment: options.comment,
-  };
-
-  if (options.aiModelName) data.ai_model_name = options.aiModelName;
-  if (options.withoutMention !== undefined) data.without_mention = options.withoutMention;
-  if (options.commentOri !== undefined) data.comment_ori = options.commentOri;
-  if (options.isRepost !== undefined) data.is_repost = options.isRepost;
-
-  return request('POST', url, data);
-}
-
-/**
- * 查询评论列表（一级评论和子评论）
- * @param {string} token - 认证令牌
- * @param {object} options - 查询选项
- * @returns {Promise<object>} 评论列表
- */
-async function getComments(token, options) {
-  const params = new URLSearchParams({
-    token,
-    id: options.id,
-  });
-
-  if (options.sinceId) params.append('since_id', options.sinceId);
-  if (options.maxId) params.append('max_id', options.maxId);
-  if (options.page) params.append('page', options.page);
-  if (options.count) params.append('count', options.count);
-  if (options.childCount) params.append('child_count', options.childCount);
-  if (options.fetchChild !== undefined) params.append('fetch_child', options.fetchChild);
-  if (options.isAsc !== undefined) params.append('is_asc', options.isAsc);
-  if (options.trimUser !== undefined) params.append('trim_user', options.trimUser);
-  if (options.isEncoded !== undefined) params.append('is_encoded', options.isEncoded);
-
-  const url = `${BASE_URL}/open/crowd/comment/tree/root_child?${params.toString()}`;
-  return request('GET', url);
-}
-
-/**
- * 查询子评论
- * @param {string} token - 认证令牌
- * @param {object} options - 查询选项
- * @returns {Promise<object>} 子评论列表
- */
-async function getChildComments(token, options) {
-  const params = new URLSearchParams({
-    token,
-    id: options.id,
-  });
-
-  if (options.sinceId) params.append('since_id', options.sinceId);
-  if (options.maxId) params.append('max_id', options.maxId);
-  if (options.page) params.append('page', options.page);
-  if (options.count) params.append('count', options.count);
-  if (options.trimUser !== undefined) params.append('trim_user', options.trimUser);
-  if (options.needRootComment !== undefined) params.append('need_root_comment', options.needRootComment);
-  if (options.isAsc !== undefined) params.append('is_asc', options.isAsc);
-  if (options.isEncoded !== undefined) params.append('is_encoded', options.isEncoded);
-
-  const url = `${BASE_URL}/open/crowd/comment/tree/child?${params.toString()}`;
-  return request('GET', url);
-}
-
-/**
- * 查询可互动的超话社区列表
- * @param {string} token - 认证令牌
- * @returns {Promise<object>} 超话社区名称列表
- */
-async function getTopicNames(token) {
+async function uploadPic(token, filePath) {
+  // 获取文件信息
+  const stats = statSync(filePath);
+  const fileLength = stats.size;
+  const fileName = path.basename(filePath);
+  
+  Logger.info(`准备上传图片: ${fileName}`);
+  Logger.info(`文件大小: ${(fileLength / 1024 / 1024).toFixed(2)} MB`);
+  
+  // 读取文件内容
+  Logger.info('上传中...');
+  const fileData = await fs.readFile(filePath);
+  
+  // 构建请求 URL
   const params = new URLSearchParams({ token });
-  const url = `${BASE_URL}/open/crowd/topic_names?${params.toString()}`;
-  return request('GET', url);
-}
-
-/**
- * 查询可互动的超话社区详细信息列表
- * 查询可互动的超话社区可优先使用该接口，包含超话名称和对应的版块列表
- * @param {string} token - 认证令牌
- * @returns {Promise<object>} 超话详细信息列表，包含 topic_name 和 tag_list
- */
-async function getTopicDetails(token) {
-  const params = new URLSearchParams({ token });
-  const url = `${BASE_URL}/open/crowd/topic_details?${params.toString()}`;
-  return request('GET', url);
+  const url = `${BASE_URL}/open/pic/upload?${params.toString()}`;
+  
+  // 发送请求
+  const result = await requestWithBinary(url, fileData);
+  
+  if (result.code !== 0) {
+    throw new APIError(
+      ERROR_MESSAGES[result.code] || result.message || '上传图片失败',
+      result.code,
+      RETRYABLE_ERRORS.has(result.code)
+    );
+  }
+  
+  Logger.success('图片上传完成！');
+  return result;
 }
 
 // ============================================================================
@@ -698,7 +580,7 @@ async function getTopicDetails(token) {
  * 处理 login 命令
  */
 async function handleLoginCommand() {
-  console.log('\n=== 微博超话登录 ===\n');
+  console.log('\n=== 微博图片上传登录 ===\n');
 
   // 加载配置
   let config = await loadConfig();
@@ -728,7 +610,7 @@ async function handleLoginCommand() {
     console.log(`有效期: ${tokenManager.tokenCache.expiresIn} 秒 (约 ${(tokenManager.tokenCache.expiresIn / 3600).toFixed(1)} 小时)`);
     console.log(`过期时间: ${new Date(tokenManager.tokenCache.acquiredAt + tokenManager.tokenCache.expiresIn * 1000).toLocaleString()}`);
     
-    // 输出 JSON 格式（兼容原 token 命令的输出）
+    // 输出 JSON 格式
     console.log('\n--- Token 信息（JSON 格式）---');
     console.log(JSON.stringify({
       code: 0,
@@ -753,7 +635,7 @@ async function getValidTokenForCommand() {
   const config = await loadConfig();
   
   if (!config.appId || !config.appSecret) {
-    throw new ConfigError('未找到配置信息，请先运行 "node weibo-crowd.js login" 进行登录');
+    throw new ConfigError('未找到配置信息，请先运行 "node weibo-pic.js login" 进行登录');
   }
 
   return await tokenManager.getValidToken(config.appId, config.appSecret);
@@ -782,82 +664,30 @@ function parseArgs(args) {
  */
 function printHelp() {
   console.log(`
-微博超话 API 封装脚本
+微博图片上传 API 封装脚本
 
 使用方法:
-  node weibo-crowd.js <command> [options]
+  node weibo-pic.js <command> [options]
 
 命令:
   login              登录并获取 Token（首次使用请先执行此命令）
   refresh            刷新 Token
-  topics             查询可互动的超话社区列表（旧版）
-  topic-details      查询可互动的超话社区详细信息列表（推荐，包含版块信息）
-  timeline           查询超话帖子流
-  post               在超话中发帖
-  comment            对微博发表评论
-  reply              回复评论
-  comments           查询评论列表（一级评论和子评论）
-  child-comments     查询子评论
+  upload             上传本地图片文件
   help               显示帮助信息
 
 配置优先级:
-  1. 本地配置文件 ~/.weibo-crowd/config.json
+  1. 本地配置文件 ~/.weibo-pic/config.json
   2. OpenClaw 配置文件 ~/.openclaw/openclaw.json
 
 选项:
-  --topic=<name>     超话社区中文名（必填，可通过 topics 命令查询可用社区）
-  --status=<text>    帖子内容
-  --media-id=<id>    视频媒体ID（通过 weibo-video 技能上传视频后获取，用于发视频帖子）
-  --pic-ids=<ids>    图片ID列表（逗号分隔，通过 weibo-pic 技能上传图片后获取，用于发图片帖子，支持多图）
-  --tag-id=<id>      版块ID（通过 topic-details 命令获取，用于发帖时指定版块）
-  --comment=<text>   评论/回复内容
-  --id=<id>          微博ID
-  --cid=<id>         评论ID（回复评论时使用）
-  --model=<name>     AI模型名称
-  --count=<n>        每页条数
-  --page=<n>         页码
-  --since-id=<id>    起始ID
-  --max-id=<id>      最大ID
-  --sort-type=<n>    排序方式（0:发帖序, 1:评论序）
-  --child-count=<n>  子评论条数
-  --fetch-child=<n>  是否带出子评论（0/1）
+  --file=<path>      图片文件路径（必填）
 
 示例:
   # 首次使用，登录并配置
-  node weibo-crowd.js login
+  node weibo-pic.js login
 
-  # 查询可互动的超话社区列表（旧版）
-  node weibo-crowd.js topics
-
-  # 查询可互动的超话社区详细信息列表（推荐，包含版块信息）
-  node weibo-crowd.js topic-details
-
-  # 查询帖子流（自动使用缓存的 Token）
-  node weibo-crowd.js timeline --topic="超话名称" --count=20
-
-  # 发帖
-  node weibo-crowd.js post --topic="超话名称" --status="帖子内容" --model="deepseek-chat"
-
-  # 发帖到指定版块（tag_id 通过 topic-details 命令获取）
-  node weibo-crowd.js post --topic="超话名称" --status="帖子内容" --tag-id="10010001" --model="deepseek-chat"
-
-  # 发视频帖子（media_id 通过 weibo-video 技能上传视频后获取）
-  node weibo-crowd.js post --topic="超话名称" --status="视频帖子内容" --media-id="xxx" --model="deepseek-chat"
-
-  # 发图片帖子（pic_ids 通过 weibo-pic 技能上传图片后获取，多个用逗号分隔）
-  node weibo-crowd.js post --topic="超话名称" --status="图片帖子内容" --pic-ids="pic_id_1,pic_id_2" --model="deepseek-chat"
-
-  # 发评论
-  node weibo-crowd.js comment --id=5127468523698745 --comment="评论内容" --model="deepseek-chat"
-
-  # 回复评论
-  node weibo-crowd.js reply --cid=5127468523698745 --id=5127468523698745 --comment="回复内容" --model="deepseek-chat"
-
-  # 查询评论列表
-  node weibo-crowd.js comments --id=5127468523698745 --count=20
-
-  # 查询子评论
-  node weibo-crowd.js child-comments --id=5127468523698745 --count=20
+  # 上传图片（自动使用缓存的 Token）
+  node weibo-pic.js upload --file="/path/to/image.jpg"
 `);
 }
 
@@ -904,158 +734,28 @@ async function main() {
         break;
       }
 
-      case 'topics': {
+      case 'upload': {
+        if (!options.file) {
+          Logger.error('需要指定 --file 参数（图片文件路径）');
+          process.exit(1);
+        }
+        
+        // 检查文件是否存在
+        try {
+          await fs.access(options.file);
+        } catch (err) {
+          Logger.error(`文件不存在: ${options.file}`);
+          process.exit(1);
+        }
+        
         const token = await getValidTokenForCommand();
-        result = await getTopicNames(token);
-        break;
-      }
-
-      case 'topic-details': {
-        const token = await getValidTokenForCommand();
-        result = await getTopicDetails(token);
-        break;
-      }
-
-      case 'timeline': {
-        if (!options.topic) {
-          Logger.error('需要指定 --topic 参数（超话社区名称），可通过 topics 命令查询可用社区');
-          process.exit(1);
-        }
-        const token = await getValidTokenForCommand();
-        result = await getTimeline(token, {
-          topicName: options.topic,
-          page: options.page,
-          count: options.count,
-          sinceId: options['since-id'],
-          maxId: options['max-id'],
-          sortType: options['sort-type'],
-        });
-        break;
-      }
-
-      case 'post': {
-        if (!options.topic) {
-          Logger.error('需要指定 --topic 参数（超话社区名称），可通过 topics 命令查询可用社区');
-          process.exit(1);
-        }
-        if (!options.status) {
-          Logger.error('需要指定 --status 参数');
-          process.exit(1);
-        }
-        if (!options.model) {
-          Logger.error('需要指定 --model 参数（AI模型名称）');
-          process.exit(1);
-        }
-        const token = await getValidTokenForCommand();
-        result = await createPost(token, {
-          topicName: options.topic,
-          status: options.status,
-          aiModelName: options.model,
-          mediaId: options['media-id'],
-          picIds: options['pic-ids'],
-          tagId: options['tag-id'],
-        });
-        break;
-      }
-
-      case 'comment': {
-        if (!options.id) {
-          Logger.error('需要指定 --id 参数（微博ID）');
-          process.exit(1);
-        }
-        if (!options.comment) {
-          Logger.error('需要指定 --comment 参数');
-          process.exit(1);
-        }
-        if (!options.model) {
-          Logger.error('需要指定 --model 参数（AI模型名称）');
-          process.exit(1);
-        }
-        const token = await getValidTokenForCommand();
-        result = await createComment(token, {
-          id: Number(options.id),
-          comment: options.comment,
-          aiModelName: options.model,
-          commentOri: options['comment-ori'] !== undefined ? Number(options['comment-ori']) : undefined,
-          isRepost: options['is-repost'] !== undefined ? Number(options['is-repost']) : undefined,
-        });
-        break;
-      }
-
-      case 'reply': {
-        if (!options.cid) {
-          Logger.error('需要指定 --cid 参数（评论ID）');
-          process.exit(1);
-        }
-        if (!options.id) {
-          Logger.error('需要指定 --id 参数（微博ID）');
-          process.exit(1);
-        }
-        if (!options.comment) {
-          Logger.error('需要指定 --comment 参数');
-          process.exit(1);
-        }
-        if (!options.model) {
-          Logger.error('需要指定 --model 参数（AI模型名称）');
-          process.exit(1);
-        }
-        const token = await getValidTokenForCommand();
-        result = await replyComment(token, {
-          cid: Number(options.cid),
-          id: Number(options.id),
-          comment: options.comment,
-          aiModelName: options.model,
-          withoutMention: options['without-mention'] !== undefined ? Number(options['without-mention']) : undefined,
-          commentOri: options['comment-ori'] !== undefined ? Number(options['comment-ori']) : undefined,
-          isRepost: options['is-repost'] !== undefined ? Number(options['is-repost']) : undefined,
-        });
-        break;
-      }
-
-      case 'comments': {
-        if (!options.id) {
-          Logger.error('需要指定 --id 参数（微博ID）');
-          process.exit(1);
-        }
-        const token = await getValidTokenForCommand();
-        result = await getComments(token, {
-          id: Number(options.id),
-          sinceId: options['since-id'],
-          maxId: options['max-id'],
-          page: options.page,
-          count: options.count,
-          childCount: options['child-count'],
-          fetchChild: options['fetch-child'] !== undefined ? Number(options['fetch-child']) : undefined,
-          isAsc: options['is-asc'] !== undefined ? Number(options['is-asc']) : undefined,
-          trimUser: options['trim-user'] !== undefined ? Number(options['trim-user']) : undefined,
-          isEncoded: options['is-encoded'] !== undefined ? Number(options['is-encoded']) : undefined,
-        });
-        break;
-      }
-
-      case 'child-comments': {
-        if (!options.id) {
-          Logger.error('需要指定 --id 参数（评论楼层ID）');
-          process.exit(1);
-        }
-        const token = await getValidTokenForCommand();
-        result = await getChildComments(token, {
-          id: Number(options.id),
-          sinceId: options['since-id'],
-          maxId: options['max-id'],
-          page: options.page,
-          count: options.count,
-          trimUser: options['trim-user'] !== undefined ? Number(options['trim-user']) : undefined,
-          needRootComment: options['need-root-comment'] !== undefined ? Number(options['need-root-comment']) : undefined,
-          isAsc: options['is-asc'] !== undefined ? Number(options['is-asc']) : undefined,
-          isEncoded: options['is-encoded'] !== undefined ? Number(options['is-encoded']) : undefined,
-        });
+        result = await uploadPic(token, options.file);
         break;
       }
 
       default:
         Logger.error(`未知命令: ${command}`);
-        console.log('使用 "node weibo-crowd.js help" 查看帮助信息');
+        console.log('使用 "node weibo-pic.js help" 查看帮助信息');
         process.exit(1);
     }
 
@@ -1085,14 +785,7 @@ async function main() {
 export {
   getToken,
   refreshToken,
-  getTopicNames,
-  getTopicDetails,
-  getTimeline,
-  createPost,
-  createComment,
-  replyComment,
-  getComments,
-  getChildComments,
+  uploadPic,
   loadConfig,
   saveLocalConfig,
   TokenManager,
