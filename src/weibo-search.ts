@@ -205,7 +205,7 @@ export function registerWeiboSearchTools(api: OpenClawPluginApi) {
 
   // 检查是否配置了认证信息
   if (!searchCfg.appId || !searchCfg.appSecret) {
-    api.logger.warn?.("weibo_search: appId or appSecret not configured, search tool disabled");
+    api.logger.debug?.("weibo_search: appId or appSecret not configured, search tool disabled");
     return;
   }
 

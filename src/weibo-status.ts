@@ -220,7 +220,7 @@ export function registerWeiboStatusTools(api: OpenClawPluginApi) {
   }
 
   if (!cfg.appId || !cfg.appSecret) {
-    api.logger.warn?.("weibo_status: appId or appSecret not configured, tool disabled");
+    api.logger.debug?.("weibo_status: appId or appSecret not configured, tool disabled");
     return;
   }
 
