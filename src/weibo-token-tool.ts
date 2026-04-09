@@ -181,7 +181,7 @@ export function registerWeiboTokenTools(api: OpenClawPluginApi) {
 
   // 检查是否配置了认证信息
   if (!cfg.appId || !cfg.appSecret) {
-    api.logger.warn?.("weibo_token: appId or appSecret not configured, tool disabled");
+    api.logger.debug?.("weibo_token: appId or appSecret not configured, tool disabled");
     return;
   }
 
