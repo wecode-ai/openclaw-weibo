@@ -5,6 +5,7 @@ export type WeiboTokenResponse = {
   data: {
     token: string;
     expire_in: number;
+    uid: number;
   };
 };
 
@@ -12,6 +13,7 @@ export type WeiboTokenResult = {
   token: string;
   expiresIn: number;
   acquiredAt: number;
+  uid: number;
 };
 
 type CachedWeiboTokenResult = WeiboTokenResult & {
@@ -132,6 +134,7 @@ export async function fetchWeiboToken(
 
       const tokenResult: CachedWeiboTokenResult = {
         token: result.data.token,
+        uid: result.data.uid,
         expiresIn: result.data.expire_in,
         acquiredAt: Date.now(),
         fingerprint,

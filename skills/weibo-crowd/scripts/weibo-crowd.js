@@ -17,6 +17,8 @@
  *   reply              回复评论
  *   comments           查询评论列表（一级评论和子评论）
  *   child-comments     查询子评论
+ *   comments-to-me     查询收到的评论
+ *   comments-by-me     查询发出的评论
  *
  * 配置优先级:
  *   1. 本地配置文件 ~/.weibo-crowd/config.json
@@ -141,12 +143,12 @@ function encrypt(text) {
   const key = generateEncryptionKey();
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
-  
+
   let encrypted = cipher.update(text, 'utf8', 'hex');
   encrypted += cipher.final('hex');
-  
+
   const authTag = cipher.getAuthTag();
-  
+
   // 格式: encrypted:iv:authTag:encrypted
   return `encrypted:${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
 }
@@ -161,23 +163,23 @@ function decrypt(encryptedText) {
     // 如果没有加密前缀，返回原文（兼容旧配置）
     return encryptedText;
   }
-  
+
   const parts = encryptedText.substring(10).split(':');
   if (parts.length !== 3) {
     throw new Error('Invalid encrypted format');
   }
-  
+
   const [ivHex, authTagHex, encrypted] = parts;
   const key = generateEncryptionKey();
   const iv = Buffer.from(ivHex, 'hex');
   const authTag = Buffer.from(authTagHex, 'hex');
-  
+
   const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
   decipher.setAuthTag(authTag);
-  
+
   let decrypted = decipher.update(encrypted, 'hex', 'utf8');
   decrypted += decipher.final('utf8');
-  
+
   return decrypted;
 }
 
@@ -212,7 +214,7 @@ async function loadConfig() {
   try {
     const localData = await fs.readFile(CONFIG_PATHS.local, 'utf8');
     const localConfig = JSON.parse(localData);
-    
+
     // 解密敏感信息
     if (localConfig.appId) {
       config.appId = decrypt(localConfig.appId);
@@ -240,17 +242,17 @@ async function saveLocalConfig(config) {
     appId: encrypt(config.appId),
     appSecret: encrypt(config.appSecret)
   };
-  
+
   if (config.apiEndpoint) {
     encryptedConfig.apiEndpoint = config.apiEndpoint;
   }
-  
+
   await fs.mkdir(path.dirname(CONFIG_PATHS.local), { recursive: true });
-  
+
   // Windows 不支持 Unix 文件权限模式，需要分平台处理
   const isWindows = os.platform() === 'win32';
   const writeOptions = isWindows ? {} : { mode: 0o600 };
-  
+
   await fs.writeFile(
     CONFIG_PATHS.local,
     JSON.stringify(encryptedConfig, null, 2),
@@ -276,7 +278,7 @@ class TokenManager {
    */
   isTokenValid() {
     if (!this.tokenCache) return false;
-    const expiresAt = this.tokenCache.acquiredAt + 
+    const expiresAt = this.tokenCache.acquiredAt +
                       (this.tokenCache.expiresIn - 60) * 1000;
     return Date.now() < expiresAt;
   }
@@ -289,12 +291,12 @@ class TokenManager {
    */
   async getValidToken(appId, appSecret) {
     await this.loadTokenCache();
-    
+
     if (this.isTokenValid()) {
       Logger.debug('使用缓存的 Token');
       return this.tokenCache.token;
     }
-    
+
     Logger.debug('Token 已过期或不存在，获取新 Token');
     return await this.fetchNewToken(appId, appSecret);
   }
@@ -307,18 +309,19 @@ class TokenManager {
    */
   async fetchNewToken(appId, appSecret) {
     const result = await getToken(appId, appSecret);
-    
+
     if (result.code !== 0) {
       const message = ERROR_MESSAGES[result.code] || result.message || '获取 Token 失败';
       throw new TokenError(message, RETRYABLE_ERRORS.has(result.code));
     }
-    
+
     this.tokenCache = {
       token: result.data.token,
+      uid: result.data.uid,
       acquiredAt: Date.now(),
       expiresIn: result.data.expire_in
     };
-    
+
     await this.saveTokenCache();
     return this.tokenCache.token;
   }
@@ -340,11 +343,11 @@ class TokenManager {
    */
   async saveTokenCache() {
     await fs.mkdir(path.dirname(CONFIG_PATHS.tokenCache), { recursive: true });
-    
+
     // Windows 不支持 Unix 文件权限模式，需要分平台处理
     const isWindows = os.platform() === 'win32';
     const writeOptions = isWindows ? {} : { mode: 0o600 };
-    
+
     await fs.writeFile(
       CONFIG_PATHS.tokenCache,
       JSON.stringify(this.tokenCache, null, 2),
@@ -477,10 +480,10 @@ function request(method, url, data = null) {
  */
 function handleAPIError(result) {
   if (result.code === 0) return result;
-  
+
   const message = ERROR_MESSAGES[result.code] || result.message || '未知错误';
   const retryable = RETRYABLE_ERRORS.has(result.code);
-  
+
   throw new APIError(message, result.code, retryable);
 }
 
@@ -690,6 +693,42 @@ async function getTopicDetails(token) {
   return request('GET', url);
 }
 
+/**
+ * 查询收到的评论
+ * @param {string} token - 认证令牌
+ * @param {object} options - 查询选项
+ * @param {number} [options.page] - 页码
+ * @param {number} [options.count] - 每页条数
+ * @returns {Promise<object>} 收到的评论列表
+ */
+async function getCommentsToMe(token, options = {}) {
+  const params = new URLSearchParams({ token });
+
+  if (options.page) params.append('page', options.page);
+  if (options.count) params.append('count', options.count);
+
+  const url = `${BASE_URL}/open/crowd/comments/to_me?${params.toString()}`;
+  return request('GET', url);
+}
+
+/**
+ * 查询发出的评论
+ * @param {string} token - 认证令牌
+ * @param {object} options - 查询选项
+ * @param {number} [options.page] - 页码
+ * @param {number} [options.count] - 每页条数
+ * @returns {Promise<object>} 发出的评论列表
+ */
+async function getCommentsByMe(token, options = {}) {
+  const params = new URLSearchParams({ token });
+
+  if (options.page) params.append('page', options.page);
+  if (options.count) params.append('count', options.count);
+
+  const url = `${BASE_URL}/open/crowd/comments/by_me?${params.toString()}`;
+  return request('GET', url);
+}
+
 // ============================================================================
 // 命令处理
 // ============================================================================
@@ -725,9 +764,10 @@ async function handleLoginCommand() {
     const token = await tokenManager.fetchNewToken(config.appId, config.appSecret);
     console.log('\n✓ 登录成功！');
     console.log(`Token: ${token.substring(0, 20)}...`);
+    console.log(`Uid: ${tokenManager.tokenCache.uid}`);
     console.log(`有效期: ${tokenManager.tokenCache.expiresIn} 秒 (约 ${(tokenManager.tokenCache.expiresIn / 3600).toFixed(1)} 小时)`);
     console.log(`过期时间: ${new Date(tokenManager.tokenCache.acquiredAt + tokenManager.tokenCache.expiresIn * 1000).toLocaleString()}`);
-    
+
     // 输出 JSON 格式（兼容原 token 命令的输出）
     console.log('\n--- Token 信息（JSON 格式）---');
     console.log(JSON.stringify({
@@ -735,7 +775,8 @@ async function handleLoginCommand() {
       message: 'success',
       data: {
         token: token,
-        expire_in: tokenManager.tokenCache.expiresIn
+        uid: tokenManager.tokenCache.uid,
+        expire_in: tokenManager.tokenCache.expiresIn,
       }
     }, null, 2));
   } catch (err) {
@@ -751,7 +792,7 @@ async function handleLoginCommand() {
 async function getValidTokenForCommand() {
   // 从配置获取 Token
   const config = await loadConfig();
-  
+
   if (!config.appId || !config.appSecret) {
     throw new ConfigError('未找到配置信息，请先运行 "node weibo-crowd.js login" 进行登录');
   }
@@ -798,6 +839,8 @@ function printHelp() {
   reply              回复评论
   comments           查询评论列表（一级评论和子评论）
   child-comments     查询子评论
+  comments-to-me     查询我收到的评论
+  comments-by-me     查询我发出的评论
   help               显示帮助信息
 
 配置优先级:
@@ -858,6 +901,12 @@ function printHelp() {
 
   # 查询子评论
   node weibo-crowd.js child-comments --id=5127468523698745 --count=20
+
+  # 查询我收到的评论
+  node weibo-crowd.js comments-to-me --page=1 --count=20
+
+  # 查询我发出的评论
+  node weibo-crowd.js comments-by-me --page=1 --count=20
 `);
 }
 
@@ -891,7 +940,7 @@ async function main() {
       case 'refresh': {
         const token = await getValidTokenForCommand();
         result = await refreshToken(token);
-        
+
         // 如果刷新成功，更新缓存
         if (result.code === 0 && result.data) {
           tokenManager.tokenCache = {
@@ -1053,6 +1102,24 @@ async function main() {
         break;
       }
 
+      case 'comments-to-me': {
+        const token = await getValidTokenForCommand();
+        result = await getCommentsToMe(token, {
+          page: options.page,
+          count: options.count,
+        });
+        break;
+      }
+
+      case 'comments-by-me': {
+        const token = await getValidTokenForCommand();
+        result = await getCommentsByMe(token, {
+          page: options.page,
+          count: options.count,
+        });
+        break;
+      }
+
       default:
         Logger.error(`未知命令: ${command}`);
         console.log('使用 "node weibo-crowd.js help" 查看帮助信息');
@@ -1093,6 +1160,8 @@ export {
   replyComment,
   getComments,
   getChildComments,
+  getCommentsToMe,
+  getCommentsByMe,
   loadConfig,
   saveLocalConfig,
   TokenManager,
