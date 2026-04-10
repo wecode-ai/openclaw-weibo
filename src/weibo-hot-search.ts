@@ -45,7 +45,7 @@ function readOptionalNonBlankString(value: unknown): string | undefined {
 
 /**
  * 热搜榜 API 响应结构
- * API: http://open-im.api.weibo.com/open/weibo/hot_search
+ * API: https://open-im.api.weibo.com/open/weibo/hot_search
  */
 export type WeiboHotSearchApiResponse = {
   code: number;
@@ -86,7 +86,7 @@ const CATEGORY_MAP: Record<string, string> = {
 // ============ Core Functions ============
 
 // 默认热搜端点
-const DEFAULT_HOT_SEARCH_ENDPOINT = "http://open-im.api.weibo.com/open/weibo/hot_search";
+const DEFAULT_HOT_SEARCH_ENDPOINT = "https://open-im.api.weibo.com/open/weibo/hot_search";
 
 /**
  * 获取微博热搜榜
@@ -178,7 +178,7 @@ export type WeiboHotSearchConfig = {
   appId?: string;
   /** App Secret，用于获取 token */
   appSecret?: string;
-  /** Token 端点，默认为 http://open-im.api.weibo.com/open/auth/ws_token */
+  /** Token 端点，默认为 https://open-im.api.weibo.com/open/auth/ws_token */
   tokenEndpoint?: string;
   /** 是否启用热搜工具，默认为 true */
   enabled?: boolean;

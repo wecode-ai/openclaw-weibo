@@ -3,7 +3,7 @@ import type { WeiboConfig, ResolvedWeiboAccount } from "./types.js";
 
 const DEFAULT_ACCOUNT_ID = "default";
 const DEFAULT_WS_ENDPOINT = "ws://open-im.api.weibo.com/ws/stream";
-const DEFAULT_TOKEN_ENDPOINT = "http://open-im.api.weibo.com/open/auth/ws_token";
+const DEFAULT_TOKEN_ENDPOINT = "https://open-im.api.weibo.com/open/auth/ws_token";
 
 function readOptionalNonBlankString(value: unknown): string | undefined {
   if (typeof value === "number" && !Number.isNaN(value)) {

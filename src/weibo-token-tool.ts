@@ -34,7 +34,7 @@ const TOKEN_EXPIRE_SECONDS = 7200;
 const TOKEN_REFRESH_BUFFER_SECONDS = 60;
 
 // 默认 token 端点
-const DEFAULT_TOKEN_ENDPOINT = "http://open-im.api.weibo.com/open/auth/ws_token";
+const DEFAULT_TOKEN_ENDPOINT = "https://open-im.api.weibo.com/open/auth/ws_token";
 
 export type WeiboTokenCache = {
   token: string;
@@ -54,7 +54,7 @@ let sharedTokenCache: WeiboTokenCache | null = null;
 
 /**
  * 获取微博 API token
- * 通过 http://open-im.api.weibo.com/open/auth/ws_token 获取
+ * 通过 https://open-im.api.weibo.com/open/auth/ws_token 获取
  * token 过期时间为 2 小时
  */
 export async function fetchWeiboToken(
@@ -152,7 +152,7 @@ export type WeiboTokenConfig = {
   appId?: string;
   /** App Secret，用于获取 token */
   appSecret?: string;
-  /** Token 端点，默认为 http://open-im.api.weibo.com/open/auth/ws_token */
+  /** Token 端点，默认为 https://open-im.api.weibo.com/open/auth/ws_token */
   tokenEndpoint?: string;
   /** 是否启用 token 工具，默认为 true */
   enabled?: boolean;

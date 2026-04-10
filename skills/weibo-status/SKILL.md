@@ -105,8 +105,8 @@ metadata:
 |--------|------|------|--------|------|
 | `appId` | string | 是 | - | 应用 ID，用于获取 token |
 | `appSecret` | string | 是 | - | 应用密钥，用于获取 token |
-| `weiboStatusEndpoint` | string | 否 | `http://open-im.api.weibo.com/open/weibo/user_status` | 用户微博 API 端点 |
-| `tokenEndpoint` | string | 否 | `http://open-im.api.weibo.com/open/auth/ws_token` | Token 获取端点 |
+| `weiboStatusEndpoint` | string | 否 | `https://open-im.api.weibo.com/open/weibo/user_status` | 用户微博 API 端点 |
+| `tokenEndpoint` | string | 否 | `https://open-im.api.weibo.com/open/auth/ws_token` | Token 获取端点 |
 | `weiboStatusEnabled` | boolean | 否 | `true` | 是否启用微博状态工具 |
 
 ## API 说明
@@ -115,7 +115,7 @@ metadata:
 
 ### 获取用户微博
 ```
-GET http://open-im.api.weibo.com/open/weibo/user_status?token={token}&count={数量}&page={页码}&screen_name={昵称}&start_time={开始时间}&end_time={结束时间}&stat_date={月份}&feature={过滤类型}&visible={可见性}&trim_user={user开关}&fetch_data_only={仅数据}
+GET https://open-im.api.weibo.com/open/weibo/user_status?token={token}&count={数量}&page={页码}&screen_name={昵称}&start_time={开始时间}&end_time={结束时间}&stat_date={月份}&feature={过滤类型}&visible={可见性}&trim_user={user开关}&fetch_data_only={仅数据}
 ```
 
 ## 注意事项

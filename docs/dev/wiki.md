@@ -11,7 +11,7 @@
 
 默认地址来自配置 schema：
 
-- `tokenEndpoint`: `http://open-im.api.weibo.com/open/auth/ws_token`
+- `tokenEndpoint`: `https://open-im.api.weibo.com/open/auth/ws_token`
 - `wsEndpoint`: `ws://open-im.api.weibo.com/ws/stream`
 
 连接 URL 形式如下：

@@ -109,7 +109,7 @@ metadata:
 
 | 配置项 | 类型 | 必填 | 默认值 | 说明 |
 |--------|------|------|--------|------|
-| `weiboSearchEndpoint` | string | 否 | `http://open-im.api.weibo.com/open/wis/search_query` | 搜索 API 端点 |
+| `weiboSearchEndpoint` | string | 否 | `https://open-im.api.weibo.com/open/wis/search_query` | 搜索 API 端点 |
 | `weiboSearchEnabled` | boolean | 否 | `true` | 是否启用搜索工具 |
 
 ## API 说明
@@ -117,7 +117,7 @@ metadata:
 此工具使用微博开放平台的搜索接口：
 
 ```
-GET http://open-im.api.weibo.com/open/wis/search_query?query={关键词}
+GET https://open-im.api.weibo.com/open/wis/search_query?query={关键词}
 ```
 
 ## 返回字段说明

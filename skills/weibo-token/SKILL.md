@@ -83,7 +83,7 @@ metadata:
 |--------|------|------|--------|------|
 | `appId` | string | 是 | - | 应用 ID，用于获取 token |
 | `appSecret` | string | 是 | - | 应用密钥，用于获取 token |
-| `tokenEndpoint` | string | 否 | `http://open-im.api.weibo.com/open/auth/ws_token` | Token 获取端点 |
+| `tokenEndpoint` | string | 否 | `https://open-im.api.weibo.com/open/auth/ws_token` | Token 获取端点 |
 | `weiboTokenEnabled` | boolean | 否 | `true` | 是否启用 token 工具 |
 
 ## API 说明
@@ -92,7 +92,7 @@ metadata:
 
 ### 获取 Token
 ```
-POST http://open-im.api.weibo.com/open/auth/ws_token
+POST https://open-im.api.weibo.com/open/auth/ws_token
 Content-Type: application/json
 
 {
