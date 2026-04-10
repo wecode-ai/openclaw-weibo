@@ -317,6 +317,7 @@ class TokenManager {
 
     this.tokenCache = {
       token: result.data.token,
+      uid: result.data.uid,
       acquiredAt: Date.now(),
       expiresIn: result.data.expire_in
     };
@@ -763,6 +764,7 @@ async function handleLoginCommand() {
     const token = await tokenManager.fetchNewToken(config.appId, config.appSecret);
     console.log('\n✓ 登录成功！');
     console.log(`Token: ${token.substring(0, 20)}...`);
+    console.log(`Uid: ${tokenManager.tokenCache.uid}`);
     console.log(`有效期: ${tokenManager.tokenCache.expiresIn} 秒 (约 ${(tokenManager.tokenCache.expiresIn / 3600).toFixed(1)} 小时)`);
     console.log(`过期时间: ${new Date(tokenManager.tokenCache.acquiredAt + tokenManager.tokenCache.expiresIn * 1000).toLocaleString()}`);
 
@@ -773,7 +775,8 @@ async function handleLoginCommand() {
       message: 'success',
       data: {
         token: token,
-        expire_in: tokenManager.tokenCache.expiresIn
+        uid: tokenManager.tokenCache.uid,
+        expire_in: tokenManager.tokenCache.expiresIn,
       }
     }, null, 2));
   } catch (err) {

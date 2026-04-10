@@ -57,7 +57,7 @@ openclaw config set 'channels.weibo.appId' 'your-appId'
 
 ```bash
 # 在 OpenClaw 对话中发送
-安装 weibo cron 中的定时任务, weibo_uid 是 xxxx
+安装 weibo cron 中的定时任务
 ```
 
 AI 会根据 `weibo-cron` skill 中的配置自动添加定时任务。你也可以通过以下命令查看已配置的任务：
