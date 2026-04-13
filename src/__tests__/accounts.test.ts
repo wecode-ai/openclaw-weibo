@@ -78,9 +78,9 @@ describe("resolveWeiboAccount", () => {
 
     const account = resolveWeiboAccount({ cfg, accountId: "default" });
     expect(account.wsEndpoint).toBe("ws://open-im.api.weibo.com/ws/stream");
-    expect(account.tokenEndpoint).toBe("http://open-im.api.weibo.com/open/auth/ws_token");
+    expect(account.tokenEndpoint).toBe("https://open-im.api.weibo.com/open/auth/ws_token");
     expect(account.config.wsEndpoint).toBe("ws://open-im.api.weibo.com/ws/stream");
-    expect(account.config.tokenEndpoint).toBe("http://open-im.api.weibo.com/open/auth/ws_token");
+    expect(account.config.tokenEndpoint).toBe("https://open-im.api.weibo.com/open/auth/ws_token");
   });
 
   it("defaults chunkMode to raw when config does not set it", () => {

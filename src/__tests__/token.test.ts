@@ -181,7 +181,7 @@ describe("fetchWeiboToken", () => {
     await getValidToken(makeAccount({ tokenEndpoint: "" }), "");
 
     expect(mockFetch).toHaveBeenCalledWith(
-      "http://open-im.api.weibo.com/open/auth/ws_token",
+      "https://open-im.api.weibo.com/open/auth/ws_token",
       expect.any(Object),
     );
   });

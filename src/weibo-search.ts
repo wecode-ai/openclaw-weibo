@@ -26,7 +26,7 @@ function readOptionalNonBlankString(value: unknown): string | undefined {
 
 /**
  * 微博搜索 API 响应结构
- * API: http://open-im.api.weibo.com/open/wis/search_query
+ * API: https://open-im.api.weibo.com/open/wis/search_query
  */
 export type WeiboSearchApiResponse = {
   code: number;
@@ -84,7 +84,7 @@ export type WeiboSearchResponse = {
 // ============ Core Functions ============
 
 // 默认搜索端点
-const DEFAULT_SEARCH_ENDPOINT = "http://open-im.api.weibo.com/open/wis/search_query";
+const DEFAULT_SEARCH_ENDPOINT = "https://open-im.api.weibo.com/open/wis/search_query";
 
 /**
  * 搜索微博内容
@@ -175,7 +175,7 @@ export type WeiboSearchConfig = {
   appId?: string;
   /** App Secret，用于获取 token */
   appSecret?: string;
-  /** Token 端点，默认为 http://open-im.api.weibo.com/open/auth/ws_token */
+  /** Token 端点，默认为 https://open-im.api.weibo.com/open/auth/ws_token */
   tokenEndpoint?: string;
   /** 是否启用搜索工具，默认为 true */
   enabled?: boolean;

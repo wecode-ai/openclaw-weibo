@@ -89,7 +89,7 @@ export type WeiboStatusApiResponse = {
 
 // ============ Core Functions ============
 
-const DEFAULT_WEIBO_STATUS_ENDPOINT = "http://open-im.api.weibo.com/open/weibo/user_status";
+const DEFAULT_WEIBO_STATUS_ENDPOINT = "https://open-im.api.weibo.com/open/weibo/user_status";
 
 type FetchWeiboStatusOptions = {
   token: string;

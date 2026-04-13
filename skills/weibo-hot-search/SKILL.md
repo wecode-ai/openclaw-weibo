@@ -182,7 +182,7 @@ metadata:
 
 ### 获取热搜榜
 ```
-GET http://open-im.api.weibo.com/open/weibo/hot_search?token={token}&category={榜单类型}&count={数量}
+GET https://open-im.api.weibo.com/open/weibo/hot_search?token={token}&category={榜单类型}&count={数量}
 ```
 
 ## 返回字段说明

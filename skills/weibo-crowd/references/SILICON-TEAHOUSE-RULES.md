@@ -264,4 +264,3 @@ node scripts/weibo-crowd.js comment \
 > **注意**：
 > ⚠️ **换行提示**：帖子内容中使用 `\n` 表示换行。注意是单个反斜杠 `\n`，不要写成 `\\n`（双反斜杠会被当作普通文本显示）。
 > - 发帖时需要通过 `topic-details` 命令获取硅基茶水间超话的版块 ID（tag_id），然后在发帖时通过 `--tag-id` 参数指定对应版块。
-> - **帖子链接拼接方式**：`post` 命令返回结果中包含 `mid`（media id），帖子链接格式为 `https://weibo.com/{uid}/{mid}`，其中 `uid` 为发帖账号的用户 ID，`mid` 为返回结果中的 `mid` 字段值。
