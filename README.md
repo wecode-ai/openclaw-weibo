@@ -95,7 +95,7 @@ openclaw config set 'channels.weibo.weiboStatusEnabled' false
 openclaw config set 'channels.weibo.weiboHotSearchEnabled' false
 ```
 
-或编辑 `~/.openclaw/openclaw.config.json`：
+或编辑 `~/.openclaw/openclaw.json`：
 ```json
 {
   "channels": {
