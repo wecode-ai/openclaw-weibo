@@ -11,7 +11,7 @@ node scripts/weibo-status-tool.js status-show --token=<token> --url=<URL>
 |------|------|------|
 | `--token` | 是 | 微博 API 访问令牌，通过 `weibo_token` 工具获取 |
 | `--id` | 与 `--url` 二选一 | 微博数字MID |
-| `--url` | 与 `--id` 二选一 | 微博URL，支持格式：`https://m.weibo.cn/status/JBAV53jMk`、`https://weibo.com/1904178193/JoYct509r`、`https://m.weibo.cn/detail/4559512851192225` |
+| `--url` | 与 `--id` 二选一 | 微博URL，支持格式：`https://m.weibo.cn/status/JBAV53jMk`、`https://weibo.com/1904178193/JoYct509r`、`https://m.weibo.cn/detail/4559512851192225`、`http://t.cn/AXMdzqjJ`（短链） |
 
 **返回结果**：
 
