@@ -8,5 +8,179 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {}
+    },
+    "channelConfigs": {
+        "weibo": {
+            "label": "Weibo",
+            "description": "微博私信频道，支持与微博用户进行私信对话。",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "enabled": {
+                        "type": "boolean",
+                        "default": true,
+                        "title": "启用账号",
+                        "description": "是否启用此微博账号"
+                    },
+                    "appId": {
+                        "anyOf": [
+                            { "type": "string" },
+                            { "type": "number" }
+                        ],
+                        "title": "App ID",
+                        "description": "App ID"
+                    },
+                    "appSecret": {
+                        "type": "string",
+                        "title": "App Secret",
+                        "description": "App Secret"
+                    },
+                    "wsEndpoint": {
+                        "type": "string",
+                        "format": "uri",
+                        "default": "ws://open-im.api.weibo.com/ws/stream",
+                        "title": "WebSocket 地址",
+                        "description": "微博 WebSocket 服务地址"
+                    },
+                    "tokenEndpoint": {
+                        "type": "string",
+                        "format": "uri",
+                        "default": "https://open-im.api.weibo.com/open/auth/ws_token",
+                        "title": "Token 服务地址",
+                        "description": "获取 WebSocket Token 的服务地址"
+                    },
+                    "dmPolicy": {
+                        "type": "string",
+                        "enum": ["open", "pairing"],
+                        "default": "open",
+                        "title": "私信策略",
+                        "description": "open=允许所有人私信, pairing=仅允许配对用户"
+                    },
+                    "allowFrom": {
+                        "type": "array",
+                        "items": {
+                            "anyOf": [{ "type": "string" }, { "type": "number" }]
+                        },
+                        "title": "允许列表",
+                        "description": "允许发送私信的用户 ID 列表（白名单）"
+                    },
+                    "textChunkLimit": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "title": "文本分片限制",
+                        "description": "单条消息最大字符数，超出后自动分片"
+                    },
+                    "chunkMode": {
+                        "type": "string",
+                        "enum": ["length", "newline", "raw"],
+                        "default": "raw",
+                        "title": "分片模式",
+                        "description": "newline=按段落分片, length=按字符数分片, raw=转发上游分片"
+                    },
+                    "accounts": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                                "enabled": {
+                                    "type": "boolean",
+                                    "default": true,
+                                    "title": "启用账号",
+                                    "description": "是否启用此微博账号"
+                                },
+                                "name": {
+                                    "type": "string",
+                                    "title": "账号名称",
+                                    "description": "账号显示名称（可选）"
+                                },
+                                "appId": {
+                                    "anyOf": [
+                                        { "type": "string" },
+                                        { "type": "number" }
+                                    ],
+                                    "title": "App ID",
+                                    "description": "App ID"
+                                },
+                                "appSecret": {
+                                    "type": "string",
+                                    "title": "App Secret",
+                                    "description": "App Secret"
+                                },
+                                "wsEndpoint": {
+                                    "type": "string",
+                                    "default": "ws://open-im.api.weibo.com/ws/stream",
+                                    "title": "WebSocket 地址",
+                                    "description": "微博 WebSocket 服务地址"
+                                },
+                                "tokenEndpoint": {
+                                    "type": "string",
+                                    "default": "https://open-im.api.weibo.com/open/auth/ws_token",
+                                    "title": "Token 服务地址",
+                                    "description": "获取 WebSocket Token 的服务地址"
+                                },
+                                "textChunkLimit": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "title": "文本分片限制",
+                                    "description": "单条消息最大字符数，超出后自动分片"
+                                },
+                                "chunkMode": {
+                                    "type": "string",
+                                    "enum": ["length", "newline", "raw"],
+                                    "default": "raw",
+                                    "title": "分片模式",
+                                    "description": "newline=按段落分片, length=按字符数分片, raw=转发上游分片"
+                                }
+                            }
+                        }
+                    }
+                },
+                "additionalProperties": false
+            },
+            "uiHints": {
+                "channels.weibo.enabled": {
+                    "label": "启用账号",
+                    "help": "是否启用此微博账号"
+                },
+                "channels.weibo.appId": {
+                    "label": "App ID",
+                    "help": "App ID",
+                    "sensitive": true
+                },
+                "channels.weibo.appSecret": {
+                    "label": "App Secret",
+                    "help": "App Secret",
+                    "sensitive": true
+                },
+                "channels.weibo.wsEndpoint": {
+                    "label": "WebSocket 地址",
+                    "help": "微博 WebSocket 服务地址"
+                },
+                "channels.weibo.tokenEndpoint": {
+                    "label": "Token 服务地址",
+                    "help": "获取 WebSocket Token 的服务地址"
+                },
+                "channels.weibo.dmPolicy": {
+                    "label": "私信策略",
+                    "help": "open=允许所有人私信, pairing=仅允许配对用户"
+                },
+                "channels.weibo.allowFrom": {
+                    "label": "允许列表",
+                    "help": "允许发送私信的用户 ID 列表（白名单）"
+                },
+                "channels.weibo.textChunkLimit": {
+                    "label": "文本分片限制",
+                    "help": "单条消息最大字符数，超出后自动分片"
+                },
+                "channels.weibo.chunkMode": {
+                    "label": "分片模式",
+                    "help": "newline=按段落分片, length=按字符数分片, raw=转发上游分片"
+                },
+                "channels.weibo.accounts": {
+                    "label": "多账号配置",
+                    "help": "多账号配置，每个 key 是账号 ID"
+                }
+            }
+        }
     }
 }
