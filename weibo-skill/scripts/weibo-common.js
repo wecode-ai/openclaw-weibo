@@ -28,7 +28,6 @@ import readline from 'readline';
 export const BASE_URL = 'https://open-im.api.weibo.com';
 
 export const CONFIG_PATHS = {
-  openclaw: path.join(os.homedir(), '.openclaw', 'openclaw.json'),
   local: path.join(os.homedir(), '.weibo-skill', 'config.json'),
   tokenCache: path.join(os.homedir(), '.weibo-skill', 'token-cache.json'),
 };
@@ -159,8 +158,8 @@ export function decrypt(encryptedText) {
 // ============================================================================
 
 /**
- * 加载配置（按优先级合并）
- * 优先级：本地配置 ~/.weibo-skill/config.json > OpenClaw 配置 ~/.openclaw/openclaw.json
+ * 加载配置
+ * 从 ~/.weibo-skill/config.json 读取
  * @returns {Promise<object>} 配置对象
  */
 export async function loadConfig() {
@@ -169,20 +168,6 @@ export async function loadConfig() {
     appSecret: undefined,
   };
 
-  // 尝试读取 OpenClaw 配置（低优先级）
-  try {
-    const openclawData = await fs.readFile(CONFIG_PATHS.openclaw, 'utf8');
-    const openclawConfig = JSON.parse(openclawData);
-    const weiboConfig = openclawConfig.channels?.weibo;
-    if (weiboConfig) {
-      config.appId = config.appId || weiboConfig.appId;
-      config.appSecret = config.appSecret || weiboConfig.appSecret;
-    }
-  } catch (err) {
-    Logger.debug('OpenClaw 配置不存在或读取失败');
-  }
-
-  // 尝试读取本地配置（高优先级）
   try {
     const localData = await fs.readFile(CONFIG_PATHS.local, 'utf8');
     const localConfig = JSON.parse(localData);

@@ -33,9 +33,8 @@
  *   pic-upload         上传本地图片文件
  *   video-upload       上传本地视频文件
  *
- * 配置优先级:
- *   1. 本地配置文件 ~/.weibo-skill/config.json（优先级最高）
- *   2. OpenClaw 配置文件 ~/.openclaw/openclaw.json
+ * 配置文件路径:
+ *   ~/.weibo-skill/config.json
  */
 
 import fs from 'fs/promises';
@@ -715,9 +714,8 @@ function printHelp() {
 
   help               显示帮助信息
 
-配置优先级:
-  1. 本地配置文件 ~/.weibo-skill/config.json（优先级最高）
-  2. OpenClaw 配置文件 ~/.openclaw/openclaw.json
+配置文件路径:
+  ~/.weibo-skill/config.json
 `);
 }
 
