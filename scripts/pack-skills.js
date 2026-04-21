@@ -102,7 +102,8 @@ async function packSkill(skillName) {
   // 获取 skill 目录下的所有文件（相对路径，带 skill 名称前缀）
   const files = [];
   function collectFiles(dir, prefix = "") {
-    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    const entries = fs.readdirSync(dir, { withFileTypes: true })
+      .sort((a, b) => a.name.localeCompare(b.name));
     for (const entry of entries) {
       const fullPath = path.join(dir, entry.name);
       const relativePath = prefix ? `${prefix}/${entry.name}` : entry.name;
@@ -118,12 +119,15 @@ async function packSkill(skillName) {
 
   // 使用 tar.create 创建 tar.gz 文件
   // 使用 prefix 选项将所有文件放在 skillName 目录下
+  // 固定 mtime 为 0（Unix epoch），确保相同内容每次打包结果一致（可重现构建）
   await tar.create(
     {
-      gzip: true,
+      gzip: { level: 6 },
       file: outputFile,
       cwd: skillDir,
       prefix: skillName,
+      mtime: new Date(0),
+      portable: true,
     },
     files
   );
