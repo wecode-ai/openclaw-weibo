@@ -19,6 +19,9 @@
  *   child-comments     查询子评论
  *   comments-to-me     查询收到的评论
  *   comments-by-me     查询发出的评论
+ *   like-comment       点赞评论
+ *   like-post          点赞帖子
+ *   top-list           获取超话置顶帖列表
  *
  * 配置优先级:
  *   1. 本地配置文件 ~/.weibo-crowd/config.json
@@ -729,6 +732,44 @@ async function getCommentsByMe(token, options = {}) {
   return request('GET', url);
 }
 
+/**
+ * 点赞评论
+ * @param {string} token - 认证令牌
+ * @param {string} cid - 评论ID
+ * @returns {Promise<object>} 点赞结果
+ */
+async function likeComment(token, cid) {
+  const params = new URLSearchParams({ token, cid });
+  const url = `${BASE_URL}/open/crowd/like_comment?${params.toString()}`;
+  return request('POST', url);
+}
+
+/**
+ * 点赞帖子
+ * @param {string} token - 认证令牌
+ * @param {string} id - 帖子（微博）ID
+ * @returns {Promise<object>} 点赞结果
+ */
+async function likePost(token, id) {
+  const params = new URLSearchParams({ token, id });
+  const url = `${BASE_URL}/open/crowd/like_post?${params.toString()}`;
+  return request('POST', url);
+}
+
+/**
+ * 获取超话置顶帖列表
+ * @param {string} token - 认证令牌
+ * @param {string} topicName - 超话名称
+ * @param {string} [tagId] - 版块ID（不传则获取热门置顶，传入则获取对应版块置顶）
+ * @returns {Promise<object>} 置顶帖列表
+ */
+async function getTopList(token, topicName, tagId) {
+  const params = new URLSearchParams({ token, topic_name: topicName });
+  if (tagId) params.append('tag_id', tagId);
+  const url = `${BASE_URL}/open/crowd/top_list?${params.toString()}`;
+  return request('GET', url);
+}
+
 // ============================================================================
 // 命令处理
 // ============================================================================
@@ -841,6 +882,9 @@ function printHelp() {
   child-comments     查询子评论
   comments-to-me     查询我收到的评论
   comments-by-me     查询我发出的评论
+  like-comment       点赞评论
+  like-post          点赞帖子
+  top-list           获取超话置顶帖列表
   help               显示帮助信息
 
 配置优先级:
@@ -852,7 +896,7 @@ function printHelp() {
   --status=<text>    帖子内容
   --media-id=<id>    视频媒体ID（通过 weibo-video 技能上传视频后获取，用于发视频帖子）
   --pic-ids=<ids>    图片ID列表（逗号分隔，通过 weibo-pic 技能上传图片后获取，用于发图片帖子，支持多图）
-  --tag-id=<id>      版块ID（通过 topic-details 命令获取，用于发帖时指定版块）
+  --tag-id=<id>      版块ID（post 命令中用于指定发帖版块；top-list 命令中用于获取指定版块置顶帖，不传则获取热门置顶）
   --comment=<text>   评论/回复内容
   --id=<id>          微博ID
   --cid=<id>         评论ID（回复评论时使用）
@@ -907,6 +951,18 @@ function printHelp() {
 
   # 查询我发出的评论
   node weibo-crowd.js comments-by-me --page=1 --count=20
+
+  # 点赞评论
+  node weibo-crowd.js like-comment --cid=5127468523698745
+
+  # 点赞帖子
+  node weibo-crowd.js like-post --id=5127468523698745
+
+  # 获取超话热门置顶帖
+  node weibo-crowd.js top-list --topic="超话名称"
+
+  # 获取超话指定版块置顶帖
+  node weibo-crowd.js top-list --topic="超话名称" --tag-id="10010001"
 `);
 }
 
@@ -1120,6 +1176,36 @@ async function main() {
         break;
       }
 
+      case 'like-comment': {
+        if (!options.cid) {
+          Logger.error('需要指定 --cid 参数（评论ID）');
+          process.exit(1);
+        }
+        const token = await getValidTokenForCommand();
+        result = await likeComment(token, options.cid);
+        break;
+      }
+
+      case 'like-post': {
+        if (!options.id) {
+          Logger.error('需要指定 --id 参数（微博ID）');
+          process.exit(1);
+        }
+        const token = await getValidTokenForCommand();
+        result = await likePost(token, options.id);
+        break;
+      }
+
+      case 'top-list': {
+        if (!options.topic) {
+          Logger.error('需要指定 --topic 参数（超话社区名称）');
+          process.exit(1);
+        }
+        const token = await getValidTokenForCommand();
+        result = await getTopList(token, options.topic, options['tag-id']);
+        break;
+      }
+
       default:
         Logger.error(`未知命令: ${command}`);
         console.log('使用 "node weibo-crowd.js help" 查看帮助信息');
@@ -1162,6 +1248,9 @@ export {
   getChildComments,
   getCommentsToMe,
   getCommentsByMe,
+  likeComment,
+  likePost,
+  getTopList,
   loadConfig,
   saveLocalConfig,
   TokenManager,
