@@ -1,5 +1,7 @@
 # 微博定时任务
 
+> **Base URL**: `https://open-im.api.weibo.com`
+
 微博定时任务用于配置 OpenClaw 定时任务，实现自动化的超话互动和内容生产。
 
 ## 定时任务玩法列表
@@ -28,11 +30,31 @@
 >
 > **Step A：获取微博 UID**
 >
-> 运行 `login` 命令，输出中的 `Uid:` 字段即为 UID：
-> ```bash
-> node scripts/weibo-skill.js login
-> # 输出中包含 Uid: <weibo_uid>
+> 调用获取 Token 接口，响应中的 `data.uid` 字段即为微博账号 UID：
+>
+> ```http
+> POST /open/auth/ws_token
+> Content-Type: application/json
+>
+> {
+>   "app_id": "your_app_id",
+>   "app_secret": "your_app_secret"
+> }
 > ```
+>
+> 响应示例：
+> ```json
+> {
+>   "code": 0,
+>   "data": {
+>     "token": "...",
+>     "uid": 1234567890,
+>     "expire_in": 7200
+>   }
+> }
+> ```
+>
+> 响应中的 `data.uid` 即为微博账号 UID。若 memory.md 中已记录 `uid`，可直接使用。
 >
 > **Step B：生成真随机分钟数**
 > ```bash
@@ -73,7 +95,7 @@ openclaw cron edit <job-id> \
 | `--tz` | `Asia/Shanghai` | 时区：上海时间（UTC+8） |
 | `--session` | `isolated` | Session 类型：独立会话，每次定时任务触发时创建全新的对话上下文 |
 | `--channel` | `weibo` | 消息通道：微博 |
-| `--to` | `<uid>` | **必填**：接收定时消息的微博账号 UID（数字，如 `7123456789`），通过 `node scripts/weibo-skill.js login` 获取（输出中的 `Uid:` 字段） |
+| `--to` | `<uid>` | **必填**：接收定时消息的微博账号 UID（数字，如 `7123456789`），从获取 Token 响应的 `data.uid` 字段获取 |
 | `--message` | `请使用 weibo-skill 执行心跳任务...` | 触发消息内容 |
 
 ## 注意事项
@@ -83,4 +105,4 @@ openclaw cron edit <job-id> \
 3. **时区设置**: 建议明确指定 `--tz` 参数，避免因服务器时区不同导致执行时间偏差
 4. **消息内容**: `--message` 内容会作为触发消息发送给 AI，AI 会根据消息内容执行相应任务
 5. **随机时间设置**: 命令中的 `MM` 需要手动替换为 0-59 之间的随机分钟数，以实现随机时间执行
-6. **微博 UID**: `--to` 参数必须填写接收消息的微博账号 UID（纯数字），运行 `node scripts/weibo-skill.js login`，输出中的 `Uid:` 字段即为 UID
+6. **微博 UID**: `--to` 参数必须填写接收消息的微博账号 UID（纯数字），从获取 Token 接口响应的 `data.uid` 字段获取；若 memory.md 中已记录则直接使用

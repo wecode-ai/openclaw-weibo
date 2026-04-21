@@ -1,83 +1,146 @@
 # 微博视频上传
 
-使用 `video-upload` 命令将本地视频文件上传到微博平台。支持大文件分片上传，自动计算 MD5 校验值，显示上传进度。
+> **Base URL**: `https://open-im.api.weibo.com`
 
-## 基本用法
+将本地视频文件上传到微博平台。支持大文件分片上传，返回 `mediaId` 供发帖使用。
 
-```bash
-node scripts/weibo-skill.js video-upload --file="/path/to/video.mp4"
+## 上传流程
+
+视频上传分两步：**初始化** → **分片上传**。
+
+---
+
+## 第一步：初始化上传
+
+```http
+GET /open/video/init?token={token}&check={md5}&name={filename}&length={filesize}
 ```
 
-## 参数说明
+**Query 参数**：
 
-| 参数 | 说明 | 必填 |
+| 参数 | 必填 | 说明 |
 |------|------|------|
-| `--file` | 视频文件路径 | 是 |
-| `--type` | 文件类型，默认 video | 否 |
-| `--video-type` | 视频类型，默认 normal | 否 |
-| `--upload-only` | 是否仅上传，默认 false | 否 |
-| `--custom-name` | 是否支持自定义名称，默认 false | 否 |
+| `token` | 是 | 访问令牌 |
+| `check` | 是 | 整个文件的 MD5 校验值（十六进制字符串） |
+| `name` | 是 | 文件名（如 `video.mp4`） |
+| `length` | 是 | 文件大小（字节数） |
+| `type` | 否 | 文件类型，默认 `video` |
+| `video_type` | 否 | 视频类型，默认 `normal` |
+| `upload_only` | 否 | 是否仅上传，默认 `false` |
+| `custom_name_support` | 否 | 是否支持自定义名称，默认 `false` |
 
-## 上传过程输出
-
-```
-[INFO] 准备上传视频: video.mp4
-[INFO] 文件大小: 25.50 MB
-[INFO] 计算文件校验值...
-[INFO] 初始化上传...
-[INFO] 分片数量: 6
-[████████████████████░] 85% 上传分片 5/6
-[SUCCESS] ✓ 视频上传完成！
-```
-
-## 返回示例
+**响应示例**：
 
 ```json
 {
   "code": 0,
   "message": "success",
   "data": {
-    "mediaId": "xxx",
-    "fmid": "xxx",
+    "fileToken": "upload_token_xxx",
+    "mediaId": "media_id_xxx",
+    "length": 10240
+  }
+}
+```
+
+**响应字段说明**：
+
+| 字段 | 说明 |
+|------|------|
+| `fileToken` | 上传令牌，后续分片上传时使用 |
+| `mediaId` | 媒体 ID，发帖时使用此值 |
+| `length` | 服务端建议的分片大小（单位：KB），若为 0 则使用默认值 10240 KB（10MB） |
+
+---
+
+## 第二步：分片上传
+
+将文件按分片大小切割，逐片上传。
+
+```http
+POST /open/video/upload?token={token}&filetoken={fileToken}&filelength={fileLength}&filecheck={fileMD5}&chunksize={chunkSize}&startloc={startLoc}&chunkindex={chunkIndex}&chunkcount={chunkCount}&sectioncheck={sectionMD5}
+Content-Type: application/octet-stream
+
+<当前分片的二进制内容>
+```
+
+**Query 参数**：
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `token` | 是 | 访问令牌 |
+| `filetoken` | 是 | 初始化返回的 `fileToken` |
+| `filelength` | 是 | 文件总大小（字节） |
+| `filecheck` | 是 | 整个文件的 MD5 校验值 |
+| `chunksize` | 是 | 当前分片大小（字节） |
+| `startloc` | 是 | 当前分片在文件中的起始位置（字节偏移量） |
+| `chunkindex` | 是 | 当前分片序号（从 1 开始） |
+| `chunkcount` | 是 | 总分片数 |
+| `sectioncheck` | 是 | 当前分片的 MD5 校验值 |
+| `type` | 否 | 文件类型，默认 `video` |
+| `video_type` | 否 | 视频类型，默认 `normal` |
+
+**最后一片响应示例**：
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "complete": true,
+    "fmid": "fmid_xxx",
     "url": "https://video.weibo.com/xxx"
   }
 }
 ```
 
-## 使用流程
+**中间分片响应示例**：
 
-```
-1. 首次使用登录 → node scripts/weibo-skill.js login
-2. 准备视频文件 → 确保视频文件路径正确
-3. 上传视频 → node scripts/weibo-skill.js video-upload --file="/path/to/video.mp4"
-4. 获取上传结果 → 记录返回的 mediaId、fmid 和 url
-5. 在发帖时使用 → node scripts/weibo-skill.js post --media-id="mediaId" ...
-```
-
-## 发视频帖子示例
-
-```bash
-# 步骤1：上传视频
-node scripts/weibo-skill.js video-upload --file="/path/to/video.mp4"
-# 返回结果中包含 mediaId
-
-# 步骤2：使用获取的 mediaId 发视频帖子
-node scripts/weibo-skill.js post \
-  --topic="超话名称" \
-  --status="视频帖子内容" \
-  --media-id="上一步获取的mediaId" \
-  --model="deepseek-chat"
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "complete": false
+  }
+}
 ```
 
-> **注意**：`media_id` 是通过 video-upload 命令上传视频后生成的唯一标识，用于关联视频内容到帖子。返回结果中的 `url` 字段**不能用于发帖**。
+---
 
-## 分片上传机制
+## 分片计算方法
 
-视频上传采用分片上传机制，将大文件分割成多个小块依次上传：
+```
+分片大小 = init 响应中的 data.length * 1024（字节）
+         若 data.length 为 0，则使用默认值 10 * 1024 * 1024（10MB）
+         若分片大小 >= 文件大小，则分片大小 = 文件大小（即单片上传）
 
-1. **分片大小**：由服务端 init 接口返回（单位 KB），默认约 10MB
-2. **MD5 校验**：每个分片都会计算 MD5 校验值，确保数据完整性
-3. **断点续传**：服务端支持断点续传（需要保存 fileToken）
+总分片数 = ceil(文件大小 / 分片大小)
+
+第 i 片（从 1 开始）：
+  startloc = (i - 1) * 分片大小
+  chunksize = min(分片大小, 文件大小 - startloc)
+  sectioncheck = 该分片内容的 MD5
+```
+
+---
+
+## 完整上传流程示例
+
+```
+1. 计算文件 MD5：fileMD5 = md5(文件全部内容)
+2. 初始化：GET /open/video/init?check={fileMD5}&name=video.mp4&length={fileSize}&token={token}
+   → 获得 fileToken、mediaId、建议分片大小
+3. 按分片大小切割文件，逐片上传：
+   POST /open/video/upload?filetoken={fileToken}&chunkindex=1&chunkcount=N&...
+   POST /open/video/upload?filetoken={fileToken}&chunkindex=2&chunkcount=N&...
+   ...
+   POST /open/video/upload?filetoken={fileToken}&chunkindex=N&chunkcount=N&...
+4. 最后一片响应中 data.complete = true，上传完成
+5. 使用 mediaId 发帖（不要使用 url 字段）
+```
+
+---
 
 ## 错误码说明
 
@@ -103,14 +166,7 @@ node scripts/weibo-skill.js post \
 
 ## 核心红线（必须遵守）
 
-1. **Token 必须有效** — 所有业务接口都需要携带有效的 Token，过期后需重新获取或刷新
-2. **文件必须存在** — 上传前会检查文件是否存在，不存在会报错
-3. **网络稳定性** — 大文件上传需要稳定的网络连接，建议在网络良好时上传
+1. **Token 必须有效** — 上传接口需要携带有效的 Token，过期后需重新获取
+2. **MD5 校验** — 每个分片和整个文件都需要计算 MD5，确保数据完整性
+3. **网络稳定性** — 大文件上传需要稳定的网络连接
 4. **频率限制** — 收到 42900 错误需等待次日
-
-## 最佳实践
-
-1. **Token 自动管理** — 脚本会自动管理 Token 的缓存和刷新，无需手动处理
-2. **网络稳定** — 上传大文件时确保网络稳定，避免上传中断
-3. **文件格式** — 确保视频文件格式被微博平台支持（如 mp4、mov 等）
-4. **错误重试** — 遇到 `42900` 频率限制时，等待到第二天重试；遇到 `50000` 服务器错误时，可适当重试
