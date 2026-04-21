@@ -1,8 +1,6 @@
 # 微博定时任务
 
-> **Base URL**: `https://open-im.api.weibo.com`
-
-微博定时任务用于配置 OpenClaw 定时任务，实现自动化的超话互动和内容生产。
+微博定时任务用于配置定时任务，实现自动化的超话互动和内容生产。
 
 ## 定时任务玩法列表
 
@@ -24,85 +22,34 @@
 
 > 完整执行流程、汇报格式及示例详见 [心跳任务执行流程](HEARTBEAT-PROCESS.md)
 
-**添加/更新命令**:
+**添加/更新定时任务**:
 
-> ⚠️ **重要**：执行前必须完成以下两步准备工作：
+> ⚠️ **重要**：执行前需生成真随机分钟数：
 >
-> **Step A：获取微博 UID**
->
-> 调用获取 Token 接口，响应中的 `data.uid` 字段即为微博账号 UID：
->
-> ```http
-> POST /open/auth/ws_token
-> Content-Type: application/json
->
-> {
->   "app_id": "your_app_id",
->   "app_secret": "your_app_secret"
-> }
-> ```
->
-> 响应示例：
-> ```json
-> {
->   "code": 0,
->   "data": {
->     "token": "...",
->     "uid": 1234567890,
->     "expire_in": 7200
->   }
-> }
-> ```
->
-> 响应中的 `data.uid` 即为微博账号 UID。若 memory.md 中已记录 `uid`，可直接使用。
->
-> **Step B：生成真随机分钟数**
 > ```bash
 > echo $((RANDOM % 60))
 > ```
-> 将输出的数字替换下方命令中的 `MM`，将 Step A 获取的 UID 替换 `<uid>`。
+> 将输出的数字替换下方参数中的 `MM`。
 
-```bash
-# 先检查任务是否存在，获取 job-id
-openclaw cron list | grep "weibo-chaohua-heartbeat"
+使用当前运行环境提供的 cron 工具，按以下参数创建或更新定时任务：
 
-# 如果任务不存在，使用 add 创建（MM 替换为上方命令输出的随机数字，<uid> 替换为实际 UID）
-openclaw cron add \
-  --name "weibo-chaohua-heartbeat" \
-  --cron "MM */4 * * *" \
-  --tz "Asia/Shanghai" \
-  --session isolated \
-  --channel weibo \
-  --to <uid> \
-  --message "请读取 weibo-skill 中的心跳任务执行流程文档（references/HEARTBEAT-PROCESS.md），按照文档中的步骤执行本次心跳任务，完成后按文档格式汇报。"
+1. 检查名为 `weibo-chaohua-heartbeat` 的任务是否已存在
+2. 若不存在则创建，若已存在则更新
 
-# 如果任务已存在，使用 edit 更新（将 <job-id> 替换为实际的任务ID，MM 替换为随机数字，<uid> 替换为实际 UID）
-openclaw cron edit <job-id> \
-  --cron "MM */4 * * *" \
-  --tz "Asia/Shanghai" \
-  --session isolated \
-  --channel weibo \
-  --to <uid> \
-  --message "请读取 weibo-skill 中的心跳任务执行流程文档（references/HEARTBEAT-PROCESS.md），按照文档中的步骤执行本次心跳任务，完成后按文档格式汇报。"
-```
-
-**参数说明**:
+**任务参数**:
 
 | 参数 | 值 | 说明 |
 |------|-----|------|
-| `--name` | `weibo-chaohua-heartbeat` | 任务唯一标识名称 |
-| `--cron` | `MM */4 * * *` | Cron 表达式：每4小时执行，`MM` 必须替换为通过 `echo $((RANDOM % 60))` 生成的真随机分钟数 |
-| `--tz` | `Asia/Shanghai` | 时区：上海时间（UTC+8） |
-| `--session` | `isolated` | Session 类型：独立会话，每次定时任务触发时创建全新的对话上下文 |
-| `--channel` | `weibo` | 消息通道：微博 |
-| `--to` | `<uid>` | **必填**：接收定时消息的微博账号 UID（数字，如 `7123456789`），从获取 Token 响应的 `data.uid` 字段获取 |
-| `--message` | `请使用 weibo-skill 执行心跳任务...` | 触发消息内容 |
+| `name` | `weibo-chaohua-heartbeat` | 任务唯一标识名称 |
+| `cron` | `MM */4 * * *` | Cron 表达式：每4小时执行，`MM` 必须替换为通过 `echo $((RANDOM % 60))` 生成的真随机分钟数 |
+| `tz` | `Asia/Shanghai` | 时区：上海时间（UTC+8） |
+| `session` | `isolated` | Session 类型：独立会话，每次定时任务触发时创建全新的对话上下文 |
+| `message` | `请读取 weibo-skill 中的心跳任务执行流程文档（references/HEARTBEAT-PROCESS.md），按照文档中的步骤执行本次心跳任务，完成后按文档格式汇报。` | 触发消息内容 |
 
 ## 注意事项
 
-1. **任务名称唯一性**: 每个定时任务的 `--name` 必须唯一，重复添加同名任务会创建重复条目
-2. **避免重复任务**: 添加前先用 `openclaw cron list | grep "<任务名>"` 检查任务是否存在，存在则使用 `openclaw cron edit <job-id>` 更新
-3. **时区设置**: 建议明确指定 `--tz` 参数，避免因服务器时区不同导致执行时间偏差
-4. **消息内容**: `--message` 内容会作为触发消息发送给 AI，AI 会根据消息内容执行相应任务
-5. **随机时间设置**: 命令中的 `MM` 需要手动替换为 0-59 之间的随机分钟数，以实现随机时间执行
-6. **微博 UID**: `--to` 参数必须填写接收消息的微博账号 UID（纯数字），从获取 Token 接口响应的 `data.uid` 字段获取；若 memory.md 中已记录则直接使用
+1. **任务名称唯一性**: 每个定时任务的 `name` 必须唯一，重复添加同名任务会创建重复条目
+2. **避免重复任务**: 添加前先检查任务是否存在，存在则更新而非新建
+3. **时区设置**: 建议明确指定 `tz` 参数，避免因服务器时区不同导致执行时间偏差
+4. **消息内容**: `message` 内容会作为触发消息发送给 AI，AI 会根据消息内容执行相应任务
+5. **随机时间设置**: `MM` 需要替换为 0-59 之间的随机分钟数，以实现随机时间执行
