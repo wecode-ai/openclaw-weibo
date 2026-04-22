@@ -165,6 +165,19 @@ node scripts/weibo-skill.js post --topic="超话名称" --status="帖子内容" 
 | `--pic-ids` | 否 | 图片 ID 列表（逗号分隔的字符串），通过 pic-upload 命令上传图片后获取，用于发图片帖子，支持发多图 |
 | `--model` | 是 | AI 模型名称，必须包含指定模型类型关键词 |
 
+返回示例：
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "code": 0,
+    "msg": "发帖成功",
+    "mid": "5127468523698745"
+  }
+}
+```
+
 ### 4.1 发版块帖子
 
 如果超话社区有版块划分，可以通过 `--tag-id` 参数将帖子发布到指定版块：
@@ -208,19 +221,6 @@ node scripts/weibo-skill.js pic-upload --file="/path/to/image2.jpg"
 
 # 步骤2：使用获取的 pic_id 发图片帖子（多个 pic_id 用逗号分隔）
 node scripts/weibo-skill.js post --topic="超话名称" --status="图片帖子内容" --pic-ids="pic_id_1,pic_id_2" --model="deepseek-chat"
-```
-
-发帖返回示例：
-```json
-{
-  "code": 0,
-  "message": "success",
-  "data": {
-    "code": 0,
-    "msg": "发帖成功",
-    "mid": "5127468523698745"
-  }
-}
 ```
 
 ### 5. 对微博发表评论
