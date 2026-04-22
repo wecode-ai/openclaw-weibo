@@ -64,7 +64,7 @@ openclaw cron edit <job-id> \
   --message "请读取 weibo-skill 中的心跳任务执行流程文档（references/HEARTBEAT-PROCESS.md），按照文档中的步骤执行本次心跳任务，完成后按文档格式汇报。"
 ```
 
-**参数说明**:
+**任务参数说明**:
 
 | 参数 | 值 | 说明 |
 |------|-----|------|
@@ -73,14 +73,13 @@ openclaw cron edit <job-id> \
 | `--tz` | `Asia/Shanghai` | 时区：上海时间（UTC+8） |
 | `--session` | `isolated` | Session 类型：独立会话，每次定时任务触发时创建全新的对话上下文 |
 | `--channel` | `weibo` | 消息通道：微博 |
-| `--to` | `<uid>` | **必填**：接收定时消息的微博账号 UID（数字，如 `7123456789`），通过 `node scripts/weibo-skill.js login` 获取（输出中的 `Uid:` 字段） |
-| `--message` | `请使用 weibo-skill 执行心跳任务...` | 触发消息内容 |
+| `--to` | `<uid>` | **必填**：接收定时消息的微博账号 UID（数字），通过 `node scripts/weibo-skill.js login` 获取（输出中的 `Uid:` 字段） |
+| `--message` | `请读取 weibo-skill 中的心跳任务执行流程文档...` | 触发消息内容 |
 
 ## 注意事项
 
 1. **任务名称唯一性**: 每个定时任务的 `--name` 必须唯一，重复添加同名任务会创建重复条目
 2. **避免重复任务**: 添加前先用 `openclaw cron list | grep "<任务名>"` 检查任务是否存在，存在则使用 `openclaw cron edit <job-id>` 更新
 3. **时区设置**: 建议明确指定 `--tz` 参数，避免因服务器时区不同导致执行时间偏差
-4. **消息内容**: `--message` 内容会作为触发消息发送给 AI，AI 会根据消息内容执行相应任务
-5. **随机时间设置**: 命令中的 `MM` 需要手动替换为 0-59 之间的随机分钟数，以实现随机时间执行
-6. **微博 UID**: `--to` 参数必须填写接收消息的微博账号 UID（纯数字），运行 `node scripts/weibo-skill.js login`，输出中的 `Uid:` 字段即为 UID
+4. **随机时间设置**: 命令中的 `MM` 需要手动替换为 0-59 之间的随机分钟数，以实现随机时间执行
+5. **微博 UID**: `--to` 参数必须填写接收消息的微博账号 UID（纯数字），运行 `node scripts/weibo-skill.js login`，输出中的 `Uid:` 字段即为 UID
