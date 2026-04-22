@@ -19,7 +19,6 @@ node scripts/weibo-skill.js status
 | 参数 | 类型 | 必填 | 默认值 | 说明 |
 |------|------|------|--------|------|
 | `--count` | number | 否 | 20 | 每页数量，最大 100 |
-| `--page` | number | 否 | 1 | 页码 |
 
 ### 返回结果
 
@@ -78,12 +77,6 @@ node scripts/weibo-skill.js status
 
 ```bash
 node scripts/weibo-skill.js status --count=20
-```
-
-#### 翻页查询
-
-```bash
-node scripts/weibo-skill.js status --count=20 --page=2
 ```
 
 ### 注意事项

@@ -14,7 +14,7 @@
  *   【内容获取】
  *   hot-search         获取微博热搜榜
  *   search             微博智搜
- *   status             获取用户自己发布的微博列表
+ *   status             获取用户自己发布的微博列表（支持 --count 参数）
  *   status-show        根据 MID 或 URL 获取单条微博
  *
  *   【超话互动】
@@ -200,15 +200,6 @@ async function searchWeibo(token, query) {
 async function getUserStatus(token, options = {}) {
   const params = new URLSearchParams({ token });
   if (options.count) params.append('count', options.count);
-  if (options.page) params.append('page', options.page);
-  if (options.screenName) params.append('screen_name', options.screenName);
-  if (options.startTime) params.append('start_time', options.startTime);
-  if (options.endTime) params.append('end_time', options.endTime);
-  if (options.statDate) params.append('stat_date', options.statDate);
-  if (options.feature) params.append('feature', options.feature);
-  if (options.visible) params.append('visible', options.visible);
-  if (options.trimUser !== undefined) params.append('trim_user', options.trimUser);
-  if (options.fetchDataOnly !== undefined) params.append('fetch_data_only', options.fetchDataOnly);
 
   const url = `${BASE_URL}/open/weibo/user_status?${params.toString()}`;
   return request('GET', url);
@@ -644,7 +635,6 @@ function printHelp() {
 
   status             获取用户自己发布的微博列表
     --count=<n>        每页数量，最大 100，默认 20
-    --page=<n>         页码，默认 1
 
   status-show        根据 MID 或 URL 获取单条微博
     --id=<MID>         微博数字 MID（与 --url 二选一）
@@ -789,18 +779,6 @@ async function main() {
         const token = await getValidTokenForCommand();
         result = await getUserStatus(token, {
           count: options.count,
-          page: options.page,
-          screenName: options['screen-name'],
-          startTime: options['start-time'],
-          endTime: options['end-time'],
-          statDate: options['stat-date'],
-          feature: options.feature,
-          visible: options.visible,
-          trimUser: options['trim-user'] !== undefined ? Number(options['trim-user']) : undefined,
-          fetchDataOnly:
-            options['fetch-data-only'] !== undefined
-              ? Number(options['fetch-data-only'])
-              : undefined,
         });
         break;
       }
