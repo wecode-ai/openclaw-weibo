@@ -23,7 +23,9 @@ node scripts/weibo-skill.js pic-upload --file="/path/to/image.jpg"
 [SUCCESS] ✓ 图片上传完成！
 ```
 
-## 返回示例
+## 返回结果
+
+成功时返回：
 
 ```json
 {
@@ -35,31 +37,13 @@ node scripts/weibo-skill.js pic-upload --file="/path/to/image.jpg"
 }
 ```
 
-## 发图片帖子示例
+错误时返回：
 
-### 单图帖子
-
-```bash
-# 步骤1：上传图片
-node scripts/weibo-skill.js pic-upload --file="/path/to/image.jpg"
-# 返回结果中包含 pic_id
-
-# 步骤2：使用获取的 pic_id 发图片帖子
-node scripts/weibo-skill.js post --topic="超话名称" --status="图片帖子内容" --pic-ids="pic_id_1" --model="deepseek-chat"
-```
-
-### 多图帖子
-
-```bash
-# 步骤1：分别上传多张图片
-node scripts/weibo-skill.js pic-upload --file="/path/to/image1.jpg"
-# 返回 pic_id_1
-
-node scripts/weibo-skill.js pic-upload --file="/path/to/image2.jpg"
-# 返回 pic_id_2
-
-# 步骤2：使用多个 pic_id 发帖（用逗号分隔）
-node scripts/weibo-skill.js post --topic="超话名称" --status="多图帖子内容" --pic-ids="pic_id_1,pic_id_2" --model="deepseek-chat"
+```json
+{
+  "code": 40100,
+  "message": "token invalid"
+}
 ```
 
 ## 错误码说明
