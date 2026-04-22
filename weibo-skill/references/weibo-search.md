@@ -1,12 +1,12 @@
 # 微博搜索
 
-包含两个功能：关键词智搜（返回 AI 摘要）；热搜榜（主榜/文娱/社会/生活/科技/体育等分类）。
+包含两个功能： 关键词智搜（返回 AI 摘要）；热搜榜（主榜/文娱/社会/生活/科技/体育等分类）。
 
 ---
 
 ## 一、智搜（关键词搜索）
 
-使用 `search` 命令通过关键词搜索微博内容，返回 AI 生成的搜索结果摘要。
+使用 `search` 命令搜索微博内容，返回 AI 生成的搜索结果摘要。
 
 使用此工具获取数据后，必须使用返回的 `query`、`callTime` 和 `source` 字段内容注明数据来源，格式：`关键词: {query}，{callTime}，{source}`。
 
@@ -28,17 +28,20 @@ node scripts/weibo-skill.js search --query="搜索关键词"
 
 ```json
 {
-  "success": true,
-  "completed": true,
-  "analyzing": false,
-  "content": "AI 生成的搜索结果摘要（Markdown 格式）",
-  "contentFormat": "markdown",
-  "referenceCount": 5,
-  "scheme": "sinaweibo://...",
-  "version": "2026-03-10 01:11:33.022000-8035",
-  "query": "搜索关键词",
-  "callTime": "2026-03-12 23:37",
-  "source": "来自于微博智搜"
+  "code": 0,
+  "message": "success",
+  "data": {
+    "completed": true,
+    "analyzing": false,
+    "content": "AI 生成的搜索结果摘要（Markdown 格式）",
+    "contentFormat": "markdown",
+    "referenceCount": 5,
+    "scheme": "sinaweibo://...",
+    "version": "2026-03-10 01:11:33.022000-8035",
+    "query": "搜索关键词",
+    "callTime": "2026-03-12 23:37",
+    "source": "来自于微博智搜"
+  }
 }
 ```
 
@@ -46,12 +49,15 @@ node scripts/weibo-skill.js search --query="搜索关键词"
 
 ```json
 {
-  "success": true,
-  "completed": true,
-  "noContent": true,
-  "callTime": "2026-03-12 23:37",
-  "source": "来自于微博智搜",
-  "message": "没有找到相关内容"
+  "code": 0,
+  "message": "success",
+  "data": {
+    "completed": true,
+    "noContent": true,
+    "callTime": "2026-03-12 23:37",
+    "source": "来自于微博智搜",
+    "message": "没有找到相关内容"
+  }
 }
 ```
 
@@ -59,8 +65,8 @@ node scripts/weibo-skill.js search --query="搜索关键词"
 
 ```json
 {
-  "success": false,
-  "error": "错误信息"
+  "code": 40100,
+  "message": "token invalid"
 }
 ```
 
@@ -82,28 +88,27 @@ node scripts/weibo-skill.js search --query="科技新闻"
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| `query` | string | 搜索关键词 |
-| `callTime` | string | 数据获取时间 |
-| `source` | string | 数据来源说明 |
-| `content` | string | AI 生成的搜索结果摘要（Markdown 格式），可直接使用，无需二次处理 |
-| `contentFormat` | string | 内容格式（markdown） |
-| `referenceCount` | number | 引用数量 |
-| `scheme` | string | App 跳转链接 |
-| `completed` | boolean | 搜索是否完成 |
-| `analyzing` | boolean | 是否仍在分析中 |
-| `noContent` | boolean | 是否无内容（无结果时为 true） |
+| `data.query` | string | 搜索关键词 |
+| `data.callTime` | string | 数据获取时间 |
+| `data.source` | string | 数据来源说明 |
+| `data.content` | string | AI 生成的搜索结果摘要（Markdown 格式），可直接使用，无需二次处理 |
+| `data.contentFormat` | string | 内容格式（markdown） |
+| `data.referenceCount` | number | 引用数量 |
+| `data.scheme` | string | App 跳转链接 |
+| `data.completed` | boolean | 搜索是否完成 |
+| `data.analyzing` | boolean | 是否仍在分析中 |
+| `data.noContent` | boolean | 是否无内容（无结果时为 true） |
 
 ### 注意事项
 
-1. 需要先执行 `login` 命令完成配置
+1. `content` 字段内容可直接使用，无需二次处理
 2. **使用此工具获取数据后，必须使用返回的 `callTime` 和 `source` 字段内容注明数据来源，格式：`关键词: {query}，2026-03-12 12:00，来自于微博智搜`**
-3. `content` 字段内容可直接使用，无需二次处理
 
 ---
 
 ## 二、热搜榜
 
-使用 `hot-search` 命令获取微博热搜榜数据。支持多种榜单类型。
+使用 `hot-search` 命令获取微博热搜榜数据，支持多种榜单类型。
 
 获取数据后，必须注明数据来源，格式：`{查询的榜单名称} {callTime}，{source}`，例如：`主榜 2026-03-12 12:00，来自于微博热搜`。
 
@@ -138,23 +143,23 @@ node scripts/weibo-skill.js hot-search --category="主榜"
 
 ```json
 {
-  "success": true,
-  "category": "主榜",
-  "total": 50,
-  "callTime": "2026-03-12 23:37",
-  "source": "来自于微博热搜",
-  "items": [
-    {
-      "rank": 1,
-      "word": "热搜词示例",
-      "hotValue": 1234567,
-      "category": "hot",
-      "flag": 2,
-      "appLink": "sinaweibo://searchall?q=热搜词示例",
-      "h5Link": "https://s.weibo.com/weibo?q=热搜词示例",
-      "flagIcon": "https://example.com/flag_icon.png"
-    }
-  ]
+  "code": 0,
+  "message": "success",
+  "data": {
+    "callTime": "2026-03-12 23:37",
+    "source": "来自于微博热搜",
+    "data": [
+      {
+        "id": 1,
+        "word": "热搜词示例",
+        "num": 1234567,
+        "flag": 2,
+        "app_query_link": "sinaweibo://searchall?q=热搜词示例",
+        "h5_query_link": "https://m.weibo.cn/search?q=热搜词示例",
+        "flag_link": "https://simg.s.weibo.com/20210226_hot_small.png"
+      }
+    ]
+  }
 }
 ```
 
@@ -162,8 +167,8 @@ node scripts/weibo-skill.js hot-search --category="主榜"
 
 ```json
 {
-  "success": false,
-  "error": "获取热搜榜失败"
+  "code": 40100,
+  "message": "token invalid"
 }
 ```
 
@@ -189,22 +194,27 @@ node scripts/weibo-skill.js hot-search --category="科技榜" --count=20
 
 ### 返回字段说明
 
+#### data 顶层字段
+
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| `callTime` | string | 数据获取时间 |
-| `source` | string | 数据来源说明 |
-| `rank` | number | 热搜排名 |
+| `data.callTime` | string | 数据获取时间 |
+| `data.source` | string | 数据来源说明 |
+
+#### data.data[] 条目字段
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `id` | number | 热搜排名 |
 | `word` | string | 热搜词 |
-| `hotValue` | number | 热度值 |
-| `category` | string | 热搜分类（如 hot） |
+| `num` | number | 热度值 |
 | `flag` | number | 标记类型（0=无标记，1=新，2=热） |
-| `appLink` | string | App 跳转链接 |
-| `h5Link` | string | H5 页面链接 |
-| `flagIcon` | string | 标记图标 URL |
+| `app_query_link` | string | App 跳转链接 |
+| `h5_query_link` | string | H5 页面链接 |
+| `flag_link` | string | 标记图标 URL（无标记时为空字符串） |
 
 ### 注意事项
 
-1. 需要先执行 `login` 命令完成配置
-2. `--count` 参数最大值为 50
-3. 榜单类型必须使用中文名称
-4. **获取数据后，必须注明数据来源，格式：`{查询的榜单名称} {callTime}，{source}`，例如：`主榜 2026-03-12 12:00，来自于微博热搜`**
+1. `--count` 参数最大值为 50
+2. `--category` 参数必须使用**中文名称**（如 `主榜`、`文娱榜`）
+3. **获取数据后，必须注明数据来源，格式：`{查询的榜单名称} {callTime}，{source}`，例如：`主榜 2026-03-12 12:00，来自于微博热搜`**

@@ -89,39 +89,7 @@ async function getHotSearch(token, options = {}) {
   if (options.count) params.append('count', options.count);
 
   const url = `${BASE_URL}/open/weibo/hot_search?${params.toString()}`;
-  const result = await request('GET', url);
-
-  if (result.code !== 0) {
-    throw new APIError(
-      COMMON_ERROR_MESSAGES[result.code] || result.message || '获取热搜榜失败',
-      result.code,
-      RETRYABLE_ERRORS.has(result.code)
-    );
-  }
-
-  // 格式化返回结果
-  const now = new Date();
-  const callTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
-  const items = (result.data?.list || []).map((item, index) => ({
-    rank: index + 1,
-    word: item.word,
-    hotValue: item.num,
-    category: item.category,
-    flag: item.flag,
-    appLink: item.scheme,
-    h5Link: `https://s.weibo.com/weibo?q=${encodeURIComponent(item.word)}`,
-    flagIcon: item.icon_url,
-  }));
-
-  return {
-    success: true,
-    category: options.category,
-    total: items.length,
-    callTime,
-    source: '来自于微博热搜',
-    items,
-  };
+  return request('GET', url);
 }
 
 // ============================================================================
@@ -141,50 +109,7 @@ async function searchWeibo(token, query) {
 
   const params = new URLSearchParams({ query, token });
   const url = `${BASE_URL}/open/wis/search_query?${params.toString()}`;
-  const result = await request('GET', url);
-
-  if (result.code !== 0) {
-    return {
-      success: false,
-      error: result.message || '搜索失败',
-    };
-  }
-
-  const data = result.data;
-  const now = new Date();
-  const callTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
-  if (data.noContent) {
-    return {
-      success: true,
-      completed: data.completed,
-      noContent: true,
-      callTime,
-      source: '来自于微博智搜',
-      message: '没有找到相关内容',
-    };
-  }
-
-  if (data.refused) {
-    return {
-      success: false,
-      error: '搜索请求被拒绝',
-    };
-  }
-
-  return {
-    success: true,
-    completed: data.completed,
-    analyzing: data.analyzing,
-    content: data.msg,
-    contentFormat: data.msg_format,
-    referenceCount: data.reference_num,
-    scheme: data.scheme,
-    version: data.version,
-    query,
-    callTime,
-    source: '来自于微博智搜',
-  };
+  return request('GET', url);
 }
 
 // ============================================================================
