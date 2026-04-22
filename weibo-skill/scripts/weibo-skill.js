@@ -622,10 +622,6 @@ function printHelp() {
 
   video-upload       上传本地视频文件
     --file=<path>      视频文件路径（必填）
-    --type=<type>      文件类型，默认 video（可选）
-    --video-type=<t>   视频类型，默认 normal（可选）
-    --upload-only      是否仅上传，默认 false（可选）
-    --custom-name      是否支持自定义名称，默认 false（可选）
 
   help               显示帮助信息
 

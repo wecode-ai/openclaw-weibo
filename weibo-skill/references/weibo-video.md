@@ -13,10 +13,6 @@ node scripts/weibo-skill.js video-upload --file="/path/to/video.mp4"
 | 参数 | 说明 | 必填 |
 |------|------|------|
 | `--file` | 视频文件路径 | 是 |
-| `--type` | 文件类型，默认 video | 否 |
-| `--video-type` | 视频类型，默认 normal | 否 |
-| `--upload-only` | 是否仅上传，默认 false | 否 |
-| `--custom-name` | 是否支持自定义名称，默认 false | 否 |
 
 ## 上传过程输出
 
