@@ -1,29 +1,29 @@
 # 微博图片上传
 
-> **Base URL**: `https://open-im.api.weibo.com`
+使用 `pic-upload` 命令将本地图片文件上传到微博平台，返回图片 ID。
 
-将本地图片文件上传到微博平台，返回图片 ID（`pic_id`），供发帖时使用。
+## 基本用法
 
-## API 说明
-
-```
-POST /open/pic/upload?token={token}
-Content-Type: application/octet-stream
-
-<图片文件的二进制内容>
+```bash
+node scripts/weibo-skill.js pic-upload --file="/path/to/image.jpg"
 ```
 
-**Query 参数**：
+## 参数说明
 
-| 参数 | 必填 | 说明 |
+| 参数 | 说明 | 必填 |
 |------|------|------|
-| `token` | 是 | 访问令牌（从 Token 管理获取） |
+| `--file` | 图片文件路径 | 是 |
 
-**请求体**：图片文件的原始二进制内容（`application/octet-stream`）
+## 上传过程输出
 
-## 返回结果
+```
+[INFO] 准备上传图片: image.jpg
+[INFO] 文件大小: 1.25 MB
+[INFO] 上传中...
+[SUCCESS] ✓ 图片上传完成！
+```
 
-成功时返回：
+## 返回示例
 
 ```json
 {
@@ -35,13 +35,41 @@ Content-Type: application/octet-stream
 }
 ```
 
-错误时返回：
+## 使用流程
 
-```json
-{
-  "code": 40100,
-  "message": "token invalid"
-}
+```
+1. 首次使用登录 → node scripts/weibo-skill.js login
+2. 准备图片文件 → 确保图片文件路径正确
+3. 上传图片 → node scripts/weibo-skill.js pic-upload --file="/path/to/image.jpg"
+4. 获取上传结果 → 记录返回的 pic_id
+5. 在发帖时使用 → node scripts/weibo-skill.js post --pic-ids="pic_id" ...
+```
+
+## 发图片帖子示例
+
+### 单图帖子
+
+```bash
+# 步骤1：上传图片
+node scripts/weibo-skill.js pic-upload --file="/path/to/image.jpg"
+# 返回结果中包含 pic_id
+
+# 步骤2：使用获取的 pic_id 发图片帖子
+node scripts/weibo-skill.js post --topic="超话名称" --status="图片帖子内容" --pic-ids="pic_id_1" --model="deepseek-chat"
+```
+
+### 多图帖子
+
+```bash
+# 步骤1：分别上传多张图片
+node scripts/weibo-skill.js pic-upload --file="/path/to/image1.jpg"
+# 返回 pic_id_1
+
+node scripts/weibo-skill.js pic-upload --file="/path/to/image2.jpg"
+# 返回 pic_id_2
+
+# 步骤2：使用多个 pic_id 发帖（用逗号分隔）
+node scripts/weibo-skill.js post --topic="超话名称" --status="多图帖子内容" --pic-ids="pic_id_1,pic_id_2" --model="deepseek-chat"
 ```
 
 ## 错误码说明
@@ -62,10 +90,11 @@ Content-Type: application/octet-stream
 - PNG
 - GIF
 
-> **注意**：建议使用 JPG 格式，以获得最佳兼容性和较小的文件大小。图片文件大小不能超过 10MB。
+> **注意**：建议使用 JPG 格式，以获得最佳兼容性和较小的文件大小。
 
 ## 核心红线（必须遵守）
 
-1. **Token 必须有效** — 上传接口需要携带有效的 Token，过期后需重新获取
-2. **文件大小限制** — 图片文件大小不能超过 10MB
-3. **频率限制** — 收到 42900 错误需等待次日
+1. **Token 必须有效** — 所有业务接口都需要携带有效的 Token，过期后需重新获取或刷新
+2. **文件必须存在** — 上传前会检查文件是否存在，不存在会报错
+3. **文件大小限制** — 图片文件大小不能超过 10MB
+4. **频率限制** — 收到 42900 错误需等待次日
