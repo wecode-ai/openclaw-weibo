@@ -15,13 +15,13 @@ metadata:
 
 1. 询问用户 `App ID` 和 `App Secret`
    > 如果还没有凭证，请私信 @微博龙虾助手 发送 "连接龙虾" 获取。
-2. 运行 `login` 命令完成登录，脚本会自动加密保存凭证并获取 Token：
+2. 运行 `login` 命令完成登录，脚本会自动保存凭证并获取 Token：
 
 ```bash
 node scripts/weibo-skill.js login --app-id=<APP_ID> --app-secret=<APP_Secret>
 ```
 
-**登录成功输出**（JSON 格式）：
+登录成功输出：
 
 ```json
 {
@@ -35,20 +35,11 @@ node scripts/weibo-skill.js login --app-id=<APP_ID> --app-secret=<APP_Secret>
 }
 ```
 
-### Token 缓存机制
+### 后续使用
 
-1. **自动缓存**：首次获取的 Token 会被缓存到 `~/.weibo-skill/token-cache.json`
-2. **自动刷新**：在 Token 过期前 60 秒自动刷新
-3. **共享使用**：所有微博功能共享同一个 Token 缓存，无需重复登录
-
-### 配置说明
-
-| 配置项 | 类型 | 必填 | 说明 |
-|--------|------|------|------|
-| `appId` | string | 是 | 应用 ID，用于获取 Token |
-| `appSecret` | string | 是 | 应用密钥，用于获取 Token |
-
-配置文件路径：`~/.weibo-skill/config.json`（敏感信息使用 AES-256-GCM 加密存储）
+- **Token 自动管理**：登录成功后，凭证和 Token 会保存在本地。后续执行其他命令时，脚本会自动使用缓存的 Token，并在 Token 过期前自动刷新，无需手动管理。
+- **直接调用功能**：登录完成后，可直接运行各功能命令（搜索、发帖、上传图片/视频等），脚本会自动读取缓存凭证。
+- **重新登录**：若凭证失效或需要切换账号，重新运行 `login` 命令即可覆盖原有凭证。
 
 ---
 
