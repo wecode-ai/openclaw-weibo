@@ -58,32 +58,6 @@ Uid: 1234567890
 | `appId` | string | 是 | 应用 ID，用于获取 Token |
 | `appSecret` | string | 是 | 应用密钥，用于获取 Token |
 
-## API 说明
-
-```
-POST https://open-im.api.weibo.com/open/auth/ws_token
-Content-Type: application/json
-
-{
-  "app_id": "your_app_id",
-  "app_secret": "your_app_secret"
-}
-```
-
-响应示例：
-
-```json
-{
-  "code": 0,
-  "message": "success",
-  "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "uid": 1234567890,
-    "expire_in": 7200
-  }
-}
-```
-
 ## 注意事项
 
 1. Token 有效期为 2 小时（7200 秒）
