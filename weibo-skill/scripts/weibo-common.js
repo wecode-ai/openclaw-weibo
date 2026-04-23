@@ -492,17 +492,6 @@ export async function getToken(appId, appSecret) {
   return request('POST', url, data);
 }
 
-/**
- * 刷新 Token
- * @param {string} token - 当前 Token
- * @returns {Promise<object>} 刷新结果
- */
-export async function refreshToken(token) {
-  const url = `${BASE_URL}/open/auth/refresh_token`;
-  const data = { token };
-  return request('POST', url, data);
-}
-
 // ============================================================================
 // 通用命令处理
 // ============================================================================

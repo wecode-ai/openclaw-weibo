@@ -45,14 +45,6 @@ Uid: 1234567890
 
 > **注意**：输出中的 `Uid:` 字段即为微博账号 UID，配置定时任务时需要用到。
 
-## 刷新 Token
-
-```bash
-node scripts/weibo-skill.js refresh
-```
-
-> **通常无需手动刷新**：脚本会在 Token 过期前 60 秒自动刷新。
-
 ## Token 缓存机制
 
 1. **自动缓存**：首次获取的 Token 会被缓存到 `~/.weibo-skill/token-cache.json`

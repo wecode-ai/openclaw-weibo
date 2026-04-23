@@ -9,7 +9,6 @@
  * 命令分类:
  *   【认证】
  *   login              登录并获取 Token（首次使用请先执行此命令）
- *   refresh            刷新 Token
  *
  *   【内容获取】
  *   hot-search         获取微博热搜榜
@@ -53,7 +52,6 @@ import {
   tokenManager,
   handleLoginCommand,
   getValidTokenForCommand,
-  refreshToken,
   parseArgs,
   handleError,
 } from './weibo-common.js';
@@ -548,7 +546,6 @@ function printHelp() {
 
 【认证命令】
   login              登录并获取 Token（首次使用请先执行此命令）
-  refresh            刷新 Token
 
 【内容获取命令】
   hot-search         获取微博热搜榜
@@ -653,21 +650,6 @@ async function main() {
       case 'login':
         await handleLoginCommand('微博 Skill');
         return;
-
-      case 'refresh': {
-        const token = await getValidTokenForCommand();
-        result = await refreshToken(token);
-
-        if (result.code === 0 && result.data) {
-          tokenManager.tokenCache = {
-            token: result.data.token,
-            acquiredAt: Date.now(),
-            expiresIn: result.data.expire_in,
-          };
-          await tokenManager.saveTokenCache();
-        }
-        break;
-      }
 
       // ── 内容获取 ──────────────────────────────────────────────────────────
 
