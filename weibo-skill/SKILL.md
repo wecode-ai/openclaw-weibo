@@ -13,7 +13,9 @@ metadata:
 
 ### 首次使用配置
 
-首次使用时，向用户询问微博应用凭证（如果还没有凭证，请私信 @微博龙虾助手 发送 "连接龙虾" 获取），然后运行 `login` 命令：
+1. 询问用户 `App ID` 和 `App Secret`
+   > 如果还没有凭证，请私信 @微博龙虾助手 发送 "连接龙虾" 获取。
+2. 运行 `login` 命令完成登录，脚本会自动加密保存凭证并获取 Token：
 
 ```bash
 node scripts/weibo-skill.js login --app-id=<APP_ID> --app-secret=<APP_Secret>
@@ -32,8 +34,6 @@ node scripts/weibo-skill.js login --app-id=<APP_ID> --app-secret=<APP_Secret>
   }
 }
 ```
-
-> **注意**：输出中的 `uid` 字段即为微博账号 UID，配置定时任务时需要用到。
 
 ### Token 缓存机制
 
