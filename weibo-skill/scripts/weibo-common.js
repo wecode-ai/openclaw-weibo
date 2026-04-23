@@ -9,7 +9,6 @@
  * - Token 管理（自动缓存、刷新）
  * - HTTP 请求工具
  * - 日志工具
- * - 交互式配置向导
  */
 
 import https from 'https';
@@ -19,7 +18,6 @@ import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
 import crypto from 'crypto';
-import readline from 'readline';
 
 // ============================================================================
 // 配置常量
@@ -178,9 +176,6 @@ export async function loadConfig() {
     if (localConfig.appSecret) {
       config.appSecret = decrypt(localConfig.appSecret);
     }
-    if (localConfig.apiEndpoint) {
-      config.apiEndpoint = localConfig.apiEndpoint;
-    }
   } catch (err) {
     Logger.debug('本地配置不存在或读取失败');
   }
@@ -197,10 +192,6 @@ export async function saveLocalConfig(config) {
     appId: encrypt(config.appId),
     appSecret: encrypt(config.appSecret),
   };
-
-  if (config.apiEndpoint) {
-    encryptedConfig.apiEndpoint = config.apiEndpoint;
-  }
 
   await fs.mkdir(path.dirname(CONFIG_PATHS.local), { recursive: true });
 
@@ -428,52 +419,6 @@ export function requestWithBinary(url, data) {
 }
 
 // ============================================================================
-// 交互式配置向导
-// ============================================================================
-
-/**
- * 提示用户输入
- * @param {string} question - 问题
- * @returns {Promise<string>} 用户输入
- */
-export function prompt(question) {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  return new Promise((resolve) => {
-    rl.question(question, (answer) => {
-      rl.close();
-      resolve(answer.trim());
-    });
-  });
-}
-
-/**
- * 交互式配置向导
- * @returns {Promise<object>} 配置对象
- */
-export async function interactiveConfig() {
-  console.log('\n=== 微博 Skill 配置向导 ===\n');
-  console.log('请输入您的微博应用凭证信息。');
-  console.log('如果您还没有凭证，请私信 @微博龙虾助手 发送 "连接龙虾" 获取。\n');
-
-  const appId = await prompt('请输入 App ID: ');
-  const appSecret = await prompt('请输入 App Secret: ');
-
-  if (!appId || !appSecret) {
-    throw new ConfigError('App ID 和 App Secret 不能为空');
-  }
-
-  const config = { appId, appSecret };
-  await saveLocalConfig(config);
-
-  console.log('\n配置已保存到:', CONFIG_PATHS.local);
-  return config;
-}
-
-// ============================================================================
 // Token API
 // ============================================================================
 
@@ -497,47 +442,27 @@ export async function getToken(appId, appSecret) {
 // ============================================================================
 
 /**
- * 处理 login 命令
+ * 处理 login 命令（参数模式）
+ * @param {string} appId - 应用 ID
+ * @param {string} appSecret - 应用密钥
  * @param {string} skillName - Skill 名称（用于显示）
  */
-export async function handleLoginCommand(skillName = '微博 Skill') {
-  console.log(`\n=== ${skillName} 登录 ===\n`);
-
-  let config = await loadConfig();
-
-  if (!config.appId || !config.appSecret) {
-    console.log('未找到配置信息，开始配置向导...\n');
-    config = await interactiveConfig();
-  } else {
-    console.log('找到现有配置:');
-    console.log(`  App ID: ${config.appId}`);
-    console.log(`  App Secret: ${config.appSecret.substring(0, 10)}...`);
-    console.log();
-
-    const useExisting = await prompt('是否使用现有配置？(y/n): ');
-    if (useExisting.toLowerCase() !== 'y') {
-      config = await interactiveConfig();
-    }
+export async function handleLoginCommand(appId, appSecret, skillName = '微博 Skill') {
+  if (!appId || !appSecret) {
+    throw new ConfigError(
+      '需要提供 --app-id 和 --app-secret 参数\n' +
+      '用法: node scripts/weibo-skill.js login --app-id=<ID> --app-secret=<Secret>'
+    );
   }
 
-  console.log('\n正在获取访问令牌...');
+  const config = { appId, appSecret };
+  await saveLocalConfig(config);
+  Logger.info('配置已保存');
+
+  Logger.info('正在获取访问令牌...');
   try {
     const token = await tokenManager.fetchNewToken(config.appId, config.appSecret);
-    console.log('\n✓ 登录成功！');
-    console.log(`Token: ${token.substring(0, 20)}...`);
-    if (tokenManager.tokenCache.uid) {
-      console.log(`Uid: ${tokenManager.tokenCache.uid}`);
-    }
-    console.log(
-      `有效期: ${tokenManager.tokenCache.expiresIn} 秒 (约 ${(tokenManager.tokenCache.expiresIn / 3600).toFixed(1)} 小时)`
-    );
-    console.log(
-      `过期时间: ${new Date(
-        tokenManager.tokenCache.acquiredAt + tokenManager.tokenCache.expiresIn * 1000
-      ).toLocaleString()}`
-    );
-
-    console.log('\n--- Token 信息（JSON 格式）---');
+    Logger.success('登录成功！');
     console.log(
       JSON.stringify(
         {

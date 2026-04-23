@@ -8,7 +8,7 @@
  *
  * 命令分类:
  *   【认证】
- *   login              登录并获取 Token（首次使用请先执行此命令）
+ *   login              登录并获取 Token（--app-id=<ID> --app-secret=<Secret>）
  *
  *   【内容获取】
  *   hot-search         获取微博热搜榜
@@ -545,7 +545,9 @@ function printHelp() {
   node scripts/weibo-skill.js <command> [options]
 
 【认证命令】
-  login              登录并获取 Token（首次使用请先执行此命令）
+  login              登录并获取 Token
+    --app-id=<ID>          应用 ID（必填）
+    --app-secret=<Secret>  应用密钥（必填）
 
 【内容获取命令】
   hot-search         获取微博热搜榜
@@ -648,7 +650,7 @@ async function main() {
       // ── 认证 ──────────────────────────────────────────────────────────────
 
       case 'login':
-        await handleLoginCommand('微博 Skill');
+        await handleLoginCommand(options['app-id'], options['app-secret'], '微博 Skill');
         return;
 
       // ── 内容获取 ──────────────────────────────────────────────────────────
