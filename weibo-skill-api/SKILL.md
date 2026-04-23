@@ -9,6 +9,8 @@ metadata:
 
 # 微博 Skill
 
+> ⚠️ **执行前必读**：在执行任何功能之前，必须先阅读"功能目录"中对应功能的**执行前必读文档**，了解参数要求、约束规则和注意事项，不得跳过。
+
 ## 快速开始
 
 ### 首次使用配置
@@ -30,7 +32,7 @@ metadata:
 
 ## 功能目录
 
-| 功能 | 说明 | 文档 |
+| 功能 | 说明 | 执行前必读文档 |
 |------|------|------|
 | Token 管理 | 获取和缓存访问令牌 | [references/weibo-token.md](references/weibo-token.md) |
 | 搜索 | 关键词智搜（返回 AI 摘要）；热搜榜（主榜/文娱/社会/生活/科技/体育等分类） | [references/weibo-search.md](references/weibo-search.md) |

@@ -9,6 +9,8 @@ metadata:
 
 # 微博 Skill
 
+> ⚠️ **执行前必读**：在执行任何功能之前，必须先阅读"功能目录"中对应功能的**执行前必读文档**，了解参数要求、约束规则和注意事项，不得跳过。
+
 ## 快速开始
 
 ### 首次使用配置
@@ -45,7 +47,7 @@ node scripts/weibo-skill.js login --app-id=<APP_ID> --app-secret=<APP_Secret>
 
 ## 功能目录
 
-| 功能 | 说明 | 文档 |
+| 功能 | 说明 | 执行前必读文档 |
 |------|------|------|
 | 搜索 | 关键词智搜（返回 AI 摘要）；热搜榜（主榜/文娱/社会/生活/科技/体育等分类） | [references/weibo-search.md](references/weibo-search.md) |
 | 微博状态查询 | 获取自己发布的微博列表；根据 MID 或 URL 查询单条微博详情 | [references/weibo-status.md](references/weibo-status.md) |
