@@ -2,6 +2,7 @@ import type { OpenClawConfig } from "openclaw/plugin-sdk/core";
 import type { WeiboSendResult } from "./types.js";
 import { resolveWeiboAccount } from "./accounts.js";
 import { createWeiboClient } from "./client.js";
+import { getValidToken, getWeiboApiBaseUrl } from "./token.js";
 import { normalizeWeiboTarget } from "./targets.js";
 
 export type SendWeiboMessageParams = {
@@ -76,5 +77,83 @@ export async function sendMessageWeibo(params: SendWeiboMessageParams): Promise<
     chatId: receiveId,
     chunkId: outboundChunkId,
     done: outboundDone,
+  };
+}
+
+export type SendFileDmWeiboResult = {
+  messageId: string;
+  chatId: string;
+  fid: number;
+};
+
+/**
+ * Send a file DM via Weibo HTTP API.
+ *
+ * API: POST /open/dm/send_file?token=xxx&fileName=xxx
+ * Body: raw binary file data (application/octet-stream)
+ *
+ * The recipient (toUid) is resolved server-side from the token.
+ * The token encodes both the assistant UID (sender) and the target user UID (recipient).
+ *
+ * Response: { code: 0, data: { fid: 123456, message_id: "xxx" } }
+ */
+export async function sendFileDmWeibo(params: {
+  cfg: OpenClawConfig;
+  to: string;
+  buffer: Buffer;
+  fileName: string;
+  accountId?: string;
+}): Promise<SendFileDmWeiboResult> {
+  const { cfg, to, buffer, fileName, accountId } = params;
+  const account = resolveWeiboAccount({ cfg, accountId });
+
+  if (!account.configured) {
+    throw new Error(`Weibo account "${account.accountId}" not configured`);
+  }
+
+  const receiveId = normalizeWeiboTarget(to);
+  if (!receiveId) {
+    throw new Error(`Invalid Weibo target: ${to}`);
+  }
+
+  const token = await getValidToken(account, account.tokenEndpoint);
+
+  const url = new URL("/open/dm/send_file", getWeiboApiBaseUrl(account.tokenEndpoint));
+  url.searchParams.set("token", token);
+  url.searchParams.set("fileName", fileName);
+
+  const response = await fetch(url.toString(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/octet-stream",
+    },
+    body: buffer,
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Weibo send_file HTTP error: ${response.status} ${response.statusText}`
+    );
+  }
+
+  const result = (await response.json()) as {
+    code: number;
+    message?: string;
+    data?: { fid?: number; message_id?: string };
+  };
+
+  if (result.code !== 0) {
+    throw new Error(
+      `Weibo send_file failed: code=${result.code} message=${result.message ?? "unknown"}`
+    );
+  }
+
+  const messageId = result.data?.message_id ?? generateWeiboMessageId();
+  const fid = result.data?.fid ?? 0;
+
+  return {
+    messageId,
+    chatId: receiveId,
+    fid,
   };
 }

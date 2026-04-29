@@ -30,7 +30,16 @@ const tokenCache = new Map<string, CachedWeiboTokenResult>();
 
 // Default token endpoint - configure in your openclaw.config.json
 // Example: tokenEndpoint: "http://localhost:9810/open/auth/ws_token"
-const DEFAULT_TOKEN_ENDPOINT = "https://open-im.api.weibo.com/open/auth/ws_token";
+export const DEFAULT_TOKEN_ENDPOINT = "https://open-im.api.weibo.com/open/auth/ws_token";
+
+/**
+ * Get the base URL of the Weibo API from the token endpoint.
+ * e.g. "https://open-im.api.weibo.com/open/auth/ws_token" → "https://open-im.api.weibo.com"
+ */
+export function getWeiboApiBaseUrl(tokenEndpoint?: string): string {
+  const endpoint = readTokenEndpoint(tokenEndpoint) ?? DEFAULT_TOKEN_ENDPOINT;
+  return new URL(endpoint).origin;
+}
 
 export class WeiboTokenFetchError extends Error {
   retryable: boolean;
