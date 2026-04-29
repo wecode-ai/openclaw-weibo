@@ -148,8 +148,14 @@ export async function sendFileDmWeibo(params: {
     );
   }
 
-  const messageId = result.data?.message_id ?? generateWeiboMessageId();
-  const fid = result.data?.fid ?? 0;
+  const messageId = result.data?.message_id;
+  const fid = result.data?.fid;
+
+  if (!messageId || typeof fid !== "number") {
+    throw new Error(
+      "Weibo send_file returned success but omitted required data.message_id or data.fid"
+    );
+  }
 
   return {
     messageId,

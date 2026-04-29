@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { clearTokenCache, fetchWeiboToken, getValidToken } from "../token.js";
+import { clearTokenCache, fetchWeiboToken, getValidToken, getWeiboApiBaseUrl, DEFAULT_TOKEN_ENDPOINT } from "../token.js";
 import type { ResolvedWeiboAccount } from "../types.js";
 
 function makeAccount(overrides: Partial<ResolvedWeiboAccount> = {}): ResolvedWeiboAccount {
@@ -184,5 +184,28 @@ describe("fetchWeiboToken", () => {
       "https://open-im.api.weibo.com/open/auth/ws_token",
       expect.any(Object),
     );
+  });
+});
+
+describe("getWeiboApiBaseUrl", () => {
+  it("returns the origin of the default endpoint when no argument is given", () => {
+    expect(getWeiboApiBaseUrl()).toBe("https://open-im.api.weibo.com");
+  });
+
+  it("returns the origin of a custom endpoint", () => {
+    expect(getWeiboApiBaseUrl("https://my-proxy.example.com/open/auth/ws_token")).toBe(
+      "https://my-proxy.example.com",
+    );
+  });
+
+  it("falls back to the default endpoint origin when the argument is blank", () => {
+    expect(getWeiboApiBaseUrl("")).toBe(new URL(DEFAULT_TOKEN_ENDPOINT).origin);
+  });
+
+  it("throws a clear configuration error when the endpoint is not a valid URL", () => {
+    expect(() => getWeiboApiBaseUrl("not-a-url")).toThrow(
+      /Invalid configuration for "tokenEndpoint"/,
+    );
+    expect(() => getWeiboApiBaseUrl("not-a-url")).toThrow("not-a-url");
   });
 });

@@ -103,7 +103,7 @@ export const weiboOutbound: ChannelOutboundAdapter = {
           };
         }
 
-        // Local path but not a path-not-allowed error — re-throw
+        // Non-HTTP(S) mediaUrl inputs (e.g. local paths) have no link fallback — re-throw
         throw err;
       }
     }
