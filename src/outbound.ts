@@ -47,9 +47,10 @@ export const weiboOutbound: ChannelOutboundAdapter = {
   sendMedia: async (ctx: ChannelOutboundContext) => {
     const { cfg, to, text, mediaUrl, accountId, mediaLocalRoots } = ctx;
 
+    let textResult: Awaited<ReturnType<typeof sendMessageWeibo>> | undefined;
     // Send text first if provided
     if (text?.trim()) {
-      await sendMessageWeibo({
+      textResult = await sendMessageWeibo({
         cfg,
         to: to ?? "",
         text,
@@ -106,6 +107,14 @@ export const weiboOutbound: ChannelOutboundAdapter = {
         // Non-HTTP(S) mediaUrl inputs (e.g. local paths) have no link fallback — re-throw
         throw err;
       }
+    }
+
+    if (textResult) {
+      return {
+        channel: "weibo" as const,
+        messageId: textResult.messageId,
+        chatId: textResult.chatId,
+      };
     }
 
     // No media URL, just return text result
