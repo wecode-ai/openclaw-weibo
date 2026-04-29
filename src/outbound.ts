@@ -47,6 +47,8 @@ export const weiboOutbound: ChannelOutboundAdapter = {
   sendMedia: async (ctx: ChannelOutboundContext) => {
     const { cfg, to, text, mediaUrl, accountId, mediaLocalRoots } = ctx;
 
+    // console.info(`[weibo] sendMedia called with mediaUrl=${mediaUrl} and text length=${text?.length}`);
+
     let textResult: Awaited<ReturnType<typeof sendMessageWeibo>> | undefined;
     // Send text first if provided
     if (text?.trim()) {

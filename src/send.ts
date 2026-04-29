@@ -26,9 +26,11 @@ function normalizeChunkId(chunkId?: number): number {
   return Math.floor(chunkId);
 }
 
+// Stream debug flag — off by default; flip to true locally to trace WS frames.
+const STREAM_DEBUG_ENABLED = false;
+
 export async function sendMessageWeibo(params: SendWeiboMessageParams): Promise<WeiboSendResult> {
   const { cfg, to, text, accountId, messageId, chunkId, done } = params;
-  const streamDebugEnabled = process.env.WEIBO_STREAM_DEBUG === "1";
   const account = resolveWeiboAccount({ cfg, accountId });
 
   if (!account.configured) {
@@ -59,7 +61,7 @@ export async function sendMessageWeibo(params: SendWeiboMessageParams): Promise<
       done: outboundDone,
     },
   });
-  if (streamDebugEnabled) {
+  if (STREAM_DEBUG_ENABLED) {
     console.log(
       `[weibo][stream-debug] ws_send ${JSON.stringify({
         toUserId: userId,

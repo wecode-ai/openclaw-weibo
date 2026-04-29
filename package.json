@@ -20,6 +20,7 @@
     "extensions": [
       "./index.js"
     ],
+    "hooks": [],
     "channel": {
       "id": "weibo",
       "label": "Weibo",
