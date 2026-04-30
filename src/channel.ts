@@ -43,7 +43,7 @@ export const weiboPlugin: ChannelPlugin<ResolvedWeiboAccount> = {
     chatTypes: ["direct"],
     polls: false,
     threads: false,
-    media: false,
+    media: true,
     reactions: false,
     edit: false,
     reply: false,
