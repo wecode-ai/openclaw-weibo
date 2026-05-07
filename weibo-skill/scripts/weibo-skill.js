@@ -27,6 +27,9 @@
  *   child-comments     查询子评论
  *   comments-to-me     查询收到的评论
  *   comments-by-me     查询发出的评论
+ *   like-comment       点赞评论
+ *   like-post          点赞帖子
+ *   top-list           获取超话置顶帖列表
  *
  *   【媒体上传】
  *   pic-upload         上传本地图片文件
@@ -302,6 +305,44 @@ async function getCommentsByMe(token, options = {}) {
   if (options.count) params.append('count', options.count);
 
   const url = `${BASE_URL}/open/crowd/comments/by_me?${params.toString()}`;
+  return request('GET', url);
+}
+
+/**
+ * 点赞评论
+ * @param {string} token - 认证令牌
+ * @param {string} cid - 评论ID
+ * @returns {Promise<object>} 点赞结果
+ */
+async function likeComment(token, cid) {
+  const params = new URLSearchParams({ token, cid });
+  const url = `${BASE_URL}/open/crowd/like_comment?${params.toString()}`;
+  return request('POST', url);
+}
+
+/**
+ * 点赞帖子
+ * @param {string} token - 认证令牌
+ * @param {string} id - 帖子（微博）ID
+ * @returns {Promise<object>} 点赞结果
+ */
+async function likePost(token, id) {
+  const params = new URLSearchParams({ token, id });
+  const url = `${BASE_URL}/open/crowd/like_post?${params.toString()}`;
+  return request('POST', url);
+}
+
+/**
+ * 获取超话置顶帖列表
+ * @param {string} token - 认证令牌
+ * @param {string} topicName - 超话名称
+ * @param {string} [tagId] - 版块ID（不传则获取热门置顶，传入则获取对应版块置顶）
+ * @returns {Promise<object>} 置顶帖列表
+ */
+async function getTopList(token, topicName, tagId) {
+  const params = new URLSearchParams({ token, topic_name: topicName });
+  if (tagId) params.append('tag_id', tagId);
+  const url = `${BASE_URL}/open/crowd/top_list?${params.toString()}`;
   return request('GET', url);
 }
 
@@ -615,6 +656,16 @@ function printHelp() {
     --page=<n>         页码，默认 1
     --count=<n>        每页条数
 
+  like-comment       点赞评论
+    --cid=<id>         要点赞的评论ID（必填）
+
+  like-post          点赞帖子
+    --id=<id>          要点赞的帖子（微博）ID（必填）
+
+  top-list           获取超话置顶帖列表
+    --topic=<name>     超话社区中文名（必填）
+    --tag-id=<id>      版块ID（可选，不传则获取热门置顶，传入则获取对应版块置顶）
+
 【媒体上传命令】
   pic-upload         上传本地图片文件
     --file=<path>      图片文件路径（必填）
@@ -882,6 +933,36 @@ async function main() {
           page: options.page,
           count: options.count,
         });
+        break;
+      }
+
+      case 'like-comment': {
+        if (!options.cid) {
+          Logger.error('需要指定 --cid 参数（评论ID）');
+          process.exit(1);
+        }
+        const token = await getValidTokenForCommand();
+        result = await likeComment(token, options.cid);
+        break;
+      }
+
+      case 'like-post': {
+        if (!options.id) {
+          Logger.error('需要指定 --id 参数（微博ID）');
+          process.exit(1);
+        }
+        const token = await getValidTokenForCommand();
+        result = await likePost(token, options.id);
+        break;
+      }
+
+      case 'top-list': {
+        if (!options.topic) {
+          Logger.error('需要指定 --topic 参数（超话社区名称）');
+          process.exit(1);
+        }
+        const token = await getValidTokenForCommand();
+        result = await getTopList(token, options.topic, options['tag-id']);
         break;
       }
 

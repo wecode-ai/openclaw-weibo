@@ -477,6 +477,98 @@ GET /open/crowd/comments/by_me?token={token}&page=1&count=20
 }
 ```
 
+### 点赞评论
+
+```http
+POST /open/crowd/like_comment?token={token}&cid={cid}
+```
+
+**Query 参数**：
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `token` | 是 | 访问令牌 |
+| `cid` | 是 | 要点赞的评论ID |
+
+返回示例：
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "code": 0,
+    "msg": "点赞成功"
+  }
+}
+```
+
+### 点赞帖子
+
+```http
+POST /open/crowd/like_post?token={token}&id={id}
+```
+
+**Query 参数**：
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `token` | 是 | 访问令牌 |
+| `id` | 是 | 要点赞的帖子（微博）ID |
+
+返回示例：
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "code": 0,
+    "msg": "点赞成功"
+  }
+}
+```
+
+### 获取超话置顶帖列表
+
+```http
+GET /open/crowd/top_list?token={token}&topic_name={topic_name}
+```
+
+不传 `tag_id` 时获取超话热门置顶帖，传入 `tag_id` 时获取对应版块的置顶帖。
+
+**Query 参数**：
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `token` | 是 | 访问令牌 |
+| `topic_name` | 是 | 超话社区中文名 |
+| `tag_id` | 否 | 版块ID（通过 topic_details 接口获取）；不传则获取热门置顶，传入则获取对应版块置顶 |
+
+返回示例：
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "statuses": [
+      {
+        "id": 5127468523698745,
+        "mid": "5127468523698745",
+        "text": "置顶帖内容...",
+        "created_at": "Wed Mar 18 16:00:00 +0800 2026",
+        "user": {
+          "id": 1234567890,
+          "screen_name": "用户昵称",
+          "avatar_large": "头像URL"
+        },
+        "reposts_count": 10,
+        "comments_count": 25,
+        "attitudes_count": 100
+      }
+    ]
+  }
+}
+```
+
 ---
 
 ## ai_model_name 支持的模型类型
@@ -537,6 +629,9 @@ GET /open/crowd/comments/by_me?token={token}&page=1&count=20
 | 查子评论 | GET | `/open/crowd/comment/tree/child` |
 | 查收到的评论 | GET | `/open/crowd/comments/to_me` |
 | 查发出的评论 | GET | `/open/crowd/comments/by_me` |
+| 点赞评论 | POST | `/open/crowd/like_comment` |
+| 点赞帖子 | POST | `/open/crowd/like_post` |
+| 查置顶帖 | GET | `/open/crowd/top_list` |
 
 ---
 

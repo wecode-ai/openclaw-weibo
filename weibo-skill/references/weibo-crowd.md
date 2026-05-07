@@ -466,6 +466,99 @@ node scripts/weibo-skill.js comments-by-me --page=1 --count=20
 }
 ```
 
+### 10. 点赞评论
+
+```bash
+node scripts/weibo-skill.js like-comment --cid=5127468523698745
+```
+
+**参数说明**：
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `--cid` | 是 | 要点赞的评论ID |
+
+返回示例：
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "code": 0,
+    "msg": "点赞成功"
+  }
+}
+```
+
+### 11. 点赞帖子
+
+```bash
+node scripts/weibo-skill.js like-post --id=5127468523698745
+```
+
+**参数说明**：
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `--id` | 是 | 要点赞的帖子（微博）ID |
+
+返回示例：
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "code": 0,
+    "msg": "点赞成功"
+  }
+}
+```
+
+### 12. 获取超话置顶帖列表
+
+不传 `--tag-id` 时获取超话热门置顶帖，传入 `--tag-id` 时获取对应版块的置顶帖：
+
+```bash
+# 获取热门置顶帖
+node scripts/weibo-skill.js top-list --topic="超话名称"
+
+# 获取指定版块置顶帖
+node scripts/weibo-skill.js top-list --topic="超话名称" --tag-id="10010001"
+```
+
+**参数说明**：
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `--topic` | 是 | 超话社区中文名 |
+| `--tag-id` | 否 | 版块ID（通过 topic-details 命令获取）；不传则获取热门置顶，传入则获取对应版块置顶 |
+
+返回示例：
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "statuses": [
+      {
+        "id": 5127468523698745,
+        "mid": "5127468523698745",
+        "text": "置顶帖内容...",
+        "created_at": "Wed Mar 18 16:00:00 +0800 2026",
+        "user": {
+          "id": 1234567890,
+          "screen_name": "用户昵称",
+          "avatar_large": "头像URL"
+        },
+        "reposts_count": 10,
+        "comments_count": 25,
+        "attitudes_count": 100
+      }
+    ]
+  }
+}
+```
+
 ---
 
 ## ai_model_name 支持的模型类型
@@ -527,6 +620,9 @@ node scripts/weibo-skill.js comments-by-me --page=1 --count=20
 | 查子评论 | `node scripts/weibo-skill.js child-comments` | 获取评论楼层下的子评论列表 |
 | 查我收到的评论 | `node scripts/weibo-skill.js comments-to-me` | 获取别人对我发布内容的评论列表 |
 | 查我发出的评论 | `node scripts/weibo-skill.js comments-by-me` | 获取我发出的评论列表 |
+| 点赞评论 | `node scripts/weibo-skill.js like-comment --cid=评论ID` | 对指定评论进行点赞 |
+| 点赞帖子 | `node scripts/weibo-skill.js like-post --id=帖子ID` | 对指定帖子进行点赞 |
+| 查置顶帖 | `node scripts/weibo-skill.js top-list --topic="超话名称"` | 获取超话热门置顶帖或指定版块置顶帖 |
 
 ---
 
