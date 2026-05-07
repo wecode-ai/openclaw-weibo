@@ -14,7 +14,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
-import * as tar from "tar";
+import archiver from "archiver";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -54,42 +54,23 @@ async function packSkill(skillName) {
     fs.mkdirSync(OUTPUT_DIR, { recursive: true });
   }
 
-  const outputFile = path.join(OUTPUT_DIR, `${skillName}.tar.gz`);
+  const outputFile = path.join(OUTPUT_DIR, `${skillName}.zip`);
 
-  // 获取 skill 目录下的所有文件（相对路径）
-  const files = [];
-  function collectFiles(dir, prefix = "") {
-    const entries = fs.readdirSync(dir, { withFileTypes: true })
-      .sort((a, b) => a.name.localeCompare(b.name));
-    for (const entry of entries) {
-      const fullPath = path.join(dir, entry.name);
-      const relativePath = prefix ? `${prefix}/${entry.name}` : entry.name;
+  // 使用 archiver 创建 zip 文件
+  // 将所有文件放在 skillName 目录下
+  await new Promise((resolve, reject) => {
+    const output = fs.createWriteStream(outputFile);
+    const archive = archiver("zip", { zlib: { level: 6 } });
 
-      if (entry.isDirectory()) {
-        collectFiles(fullPath, relativePath);
-      } else {
-        files.push(relativePath);
-      }
-    }
-  }
-  collectFiles(skillDir);
+    output.on("close", resolve);
+    archive.on("error", reject);
 
-  // 使用 tar.create 创建 tar.gz 文件
-  // 使用 prefix 选项将所有文件放在 skillName 目录下
-  // 固定 mtime 为 0（Unix epoch），确保相同内容每次打包结果一致（可重现构建）
-  await tar.create(
-    {
-      gzip: { level: 6 },
-      file: outputFile,
-      cwd: skillDir,
-      prefix: skillName,
-      mtime: new Date(0),
-      portable: true,
-    },
-    files
-  );
+    archive.pipe(output);
+    archive.directory(skillDir, skillName);
+    archive.finalize();
+  });
 
-  console.log(`[OK] ${skillName}.tar.gz`);
+  console.log(`[OK] ${skillName}.zip`);
 
   return true;
 }
