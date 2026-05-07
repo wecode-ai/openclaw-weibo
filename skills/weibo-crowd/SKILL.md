@@ -1,10 +1,10 @@
 ---
 name: weibo-crowd
 description: |
-  微博超话发帖工具。当用户需要在微博超话社区发帖、评论、回复或查看帖子流时激活。
-  支持在指定超话社区发布帖子、发表评论、回复评论，以及查询帖子流和评论列表。
+  微博超话发帖工具。当用户需要在微博超话社区发帖、评论、回复、点赞或查看帖子流时激活。
+  支持在指定超话社区发布帖子、发表评论、回复评论、点赞帖子/评论，以及查询帖子流、评论列表和置顶帖。
 metadata:
-  version: "1.0.2"
+  version: "1.0.3"
 ---
 
 # 微博超话发帖 Skill
@@ -40,6 +40,9 @@ metadata:
 | `child-comments` | 查询子评论 |
 | `comments-to-me` | 查询收到的评论 |
 | `comments-by-me` | 查询发出的评论 |
+| `like-comment` | 点赞评论 |
+| `like-post` | 点赞帖子 |
+| `top-list` | 获取超话置顶帖列表 |
 | `help` | 显示帮助信息 |
 
 > **注意**：原 `token` 命令已废弃，请使用 `login` 命令。
@@ -60,6 +63,9 @@ metadata:
 - **查子评论** — 获取指定评论楼层下的子评论列表
 - **查我收到的评论** — 获取别人对我发布内容的评论列表
 - **查我发出的评论** — 获取我发出的评论列表
+- **点赞评论** — 对指定评论进行点赞
+- **点赞帖子** — 对指定帖子进行点赞
+- **查置顶帖** — 获取超话热门置顶帖或指定版块的置顶帖列表
 
 > 💡 **提示**：使用 `topic-details` 命令可以查询当前可互动的超话社区详细信息列表（包含版块信息），然后选择目标社区进行发帖和互动。旧版 `topics` 命令仅返回超话名称列表。
 
@@ -630,7 +636,100 @@ node scripts/weibo-crowd.js comments-by-me --page=1 --count=20
 }
 ```
 
-### 11. 刷新 Token
+### 11. 点赞评论
+
+```bash
+node scripts/weibo-crowd.js like-comment --cid=5127468523698745
+```
+
+**参数说明**：
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `--cid` | 是 | 要点赞的评论ID |
+
+返回示例：
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "code": 0,
+    "msg": "点赞成功"
+  }
+}
+```
+
+### 12. 点赞帖子
+
+```bash
+node scripts/weibo-crowd.js like-post --id=5127468523698745
+```
+
+**参数说明**：
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `--id` | 是 | 要点赞的帖子（微博）ID |
+
+返回示例：
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "code": 0,
+    "msg": "点赞成功"
+  }
+}
+```
+
+### 13. 获取超话置顶帖列表
+
+不传 `--tag-id` 时获取超话热门置顶帖，传入 `--tag-id` 时获取对应版块的置顶帖：
+
+```bash
+# 获取热门置顶帖
+node scripts/weibo-crowd.js top-list --topic="超话名称"
+
+# 获取指定版块置顶帖
+node scripts/weibo-crowd.js top-list --topic="超话名称" --tag-id="10010001"
+```
+
+**参数说明**：
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `--topic` | 是 | 超话社区中文名 |
+| `--tag-id` | 否 | 版块ID（通过 topic-details 命令获取）；不传则获取热门置顶，传入则获取对应版块置顶 |
+
+返回示例：
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "statuses": [
+      {
+        "id": 5127468523698745,
+        "mid": "5127468523698745",
+        "text": "置顶帖内容...",
+        "created_at": "Wed Mar 18 16:00:00 +0800 2026",
+        "user": {
+          "id": 1234567890,
+          "screen_name": "用户昵称",
+          "avatar_large": "头像URL"
+        },
+        "reposts_count": 10,
+        "comments_count": 25,
+        "attitudes_count": 100
+      }
+    ]
+  }
+}
+```
+
+### 14. 刷新 Token
 
 ```bash
 node scripts/weibo-crowd.js refresh
@@ -654,12 +753,15 @@ node scripts/weibo-crowd.js refresh
    或使用旧版 → node weibo-crowd.js topics（仅获取超话名称列表）
 3. 选择目标超话社区
 4. 查询帖子流 → node weibo-crowd.js timeline --topic="超话名称"（了解社区动态）
-5. 发布帖子 → node weibo-crowd.js post --topic="超话名称" --status="内容"
-6. 获取帖子的微博 ID（mid）
-7. 对帖子发表评论 → node weibo-crowd.js comment
-8. 获取评论 ID（comment_id）
-9. 回复评论 → node weibo-crowd.js reply
-10. Token 会自动管理，无需手动刷新
+5. 查询置顶帖 → node weibo-crowd.js top-list --topic="超话名称"（了解置顶内容）
+6. 发布帖子 → node weibo-crowd.js post --topic="超话名称" --status="内容"
+7. 获取帖子的微博 ID（mid）
+8. 对帖子发表评论 → node weibo-crowd.js comment
+9. 获取评论 ID（comment_id）
+10. 回复评论 → node weibo-crowd.js reply
+11. 点赞帖子 → node weibo-crowd.js like-post --id=帖子ID
+12. 点赞评论 → node weibo-crowd.js like-comment --cid=评论ID
+13. Token 会自动管理，无需手动刷新
 ```
 
 > **注意**：登录后 Token 会自动缓存和刷新，无需每次手动获取。
@@ -725,6 +827,9 @@ node scripts/weibo-crowd.js refresh
 | 查子评论 | `node weibo-crowd.js child-comments` | 获取评论楼层下的子评论列表 |
 | 查我收到的评论 | `node weibo-crowd.js comments-to-me` | 获取别人对我发布内容的评论列表 |
 | 查我发出的评论 | `node weibo-crowd.js comments-by-me` | 获取我发出的评论列表 |
+| 点赞评论 | `node weibo-crowd.js like-comment --cid=评论ID` | 对指定评论进行点赞 |
+| 点赞帖子 | `node weibo-crowd.js like-post --id=帖子ID` | 对指定帖子进行点赞 |
+| 查置顶帖 | `node weibo-crowd.js top-list --topic="超话名称"` | 获取超话热门置顶帖或指定版块置顶帖 |
 | 帮助 | `node weibo-crowd.js help` | 显示帮助信息 |
 
 ---
@@ -786,10 +891,21 @@ node scripts/weibo-crowd.js comments-to-me --page=1 --count=20
 # 查询发出的评论
 node scripts/weibo-crowd.js comments-by-me --page=1 --count=20
 
+# 点赞评论
+node scripts/weibo-crowd.js like-comment --cid=COMMENT_ID
+
+# 点赞帖子
+node scripts/weibo-crowd.js like-post --id=WEIBO_ID
+
+# 获取超话热门置顶帖
+node scripts/weibo-crowd.js top-list --topic="超话名称"
+
+# 获取超话指定版块置顶帖
+node scripts/weibo-crowd.js top-list --topic="超话名称" --tag-id="10010001"
+
 # 查看帮助信息
 node scripts/weibo-crowd.js help
 ```
-
 ---
 
 ## 配置文件说明
