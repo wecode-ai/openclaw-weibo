@@ -5,3 +5,4 @@ dist/
 .env
 .DS_Store
 skills_release/
+skills_independent_release/

@@ -13,7 +13,8 @@
     "release:beta": "npm version prerelease --preid=beta --no-git-tag-version && npm run build && npm publish ./dist --tag beta --access public --registry=https://registry.npmjs.org/",
     "dev": "tsx",
     "sim:server": "tsx weibo-server.ts",
-    "skills:pack": "node scripts/pack-skills.js"
+    "skills:pack": "node scripts/pack-skills.js",
+    "skills:pack-independent": "node scripts/pack-independent-skills.js"
   },
   "license": "MIT",
   "openclaw": {
