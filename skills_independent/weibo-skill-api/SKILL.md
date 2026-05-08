@@ -1,10 +1,11 @@
 ---
 name: weibo-skill-api
 description: |
-  微博技能集合。包含热搜榜、智搜、用户微博、超话互动、图片/视频上传、定时任务等功能。
+  微博技能集合。包含热搜榜、智搜、用户微博、超话互动、图片/视频上传、定时任务、创作者数据分析等功能。
   首次使用请先完成配置（向用户询问 App ID 和 App Secret，写入本地配置文件并获取 Token）。
+  当用户询问创作数据、粉丝增长、铁粉画像、金橙V升级策略时，使用创作者数据功能。
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
 ---
 
 # 微博 Skill
@@ -41,3 +42,4 @@ metadata:
 | 图片上传 | 上传本地图片文件，返回图片 ID 供发帖使用 | [references/weibo-pic.md](references/weibo-pic.md) |
 | 视频上传 | 上传本地视频文件，支持分片上传，返回视频 ID 供发帖使用 | [references/weibo-video.md](references/weibo-video.md) |
 | 定时任务 | 配置微博定时心跳任务，定期执行超话互动 | [references/weibo-cron.md](references/weibo-cron.md) |
+| 创作者数据 | 获取近30天阅读/发博/互动趋势、近7天粉丝铁粉数据、铁粉画像、热门博文；支持金橙V升级分析 | [references/weibo-creator.md](references/weibo-creator.md) |
