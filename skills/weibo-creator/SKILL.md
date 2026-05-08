@@ -35,7 +35,7 @@ node scripts/weibo-creator.js summary --token=<token>
 
 ### 1. 近30天阅读数据
 
-#### `data.readTrend30Days` — 每日阅读趋势（数组，T-1 至 T-31，共30条）
+#### `data.readTrend30Days` — 每日阅读趋势（数组，T-1 至 T-30，共30条）
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
@@ -63,7 +63,7 @@ node scripts/weibo-creator.js summary --token=<token>
 
 ### 2. 近30天发博活跃数据
 
-#### `data.postTrend30Days` — 每日发博趋势（数组，T-1 至 T-31，共30条）
+#### `data.postTrend30Days` — 每日发博趋势（数组，T-1 至 T-30，共30条）
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
@@ -74,7 +74,7 @@ node scripts/weibo-creator.js summary --token=<token>
 
 ### 3. 近30天互动数据
 
-#### `data.interactTrend30Days` — 每日互动趋势（数组，T-1 至 T-31，共30条）
+#### `data.interactTrend30Days` — 每日互动趋势（数组，T-1 至 T-30，共30条）
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
@@ -87,7 +87,7 @@ node scripts/weibo-creator.js summary --token=<token>
 
 ### 4. 近7天粉丝&铁粉数据
 
-#### `data.fanTrend7Days` — 每日粉丝&铁粉趋势（数组，T-1 至 T-8，共7条）
+#### `data.fanTrend7Days` — 每日粉丝&铁粉趋势（数组，T-1 至 T-7，共7条）
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
@@ -247,7 +247,7 @@ node scripts/weibo-creator.js help
 | 日均新增粉丝数 | `fanTrend7Days` 中所有 `newFansCount` 求和 ÷ 7 |
 | 近30天条均阅读量 | `readTrend30Days` 总阅读量 ÷ `postTrend30Days` 中发博总数 |
 | 近30天排水阅读量变化趋势 | 对比 `readTrend30Days` 前15天与后15天的均值，判断上升/下降/平稳 |
-| 近30天铁粉数变化趋势 | 对比 `fanTrend7Days` 首尾两端的 `bigFanTotal`，判断增长速度 |
+| 近7天铁粉数变化趋势 | 对比 `fanTrend7Days` 首尾两端的 `bigFanTotal`，判断增长速度 |
 
 ### 第四步：预估达标时间
 
