@@ -15,6 +15,7 @@
  *   search             微博智搜
  *   status             获取用户自己发布的微博列表（支持 --count 参数）
  *   status-show        根据 MID 或 URL 获取单条微博
+ *   creator-summary    获取创作者数据摘要（近30天阅读/发博/互动、近7天粉丝铁粉、铁粉画像、热门博文）
  *
  *   【超话互动】
  *   topic-details      查询可互动的超话社区详细信息列表（推荐）
@@ -143,6 +144,21 @@ async function getStatusShow(token, options = {}) {
   if (options.url) params.set('url', options.url);
 
   const url = `${BASE_URL}/open/weibo/status_show?${params.toString()}`;
+  return request('GET', url);
+}
+
+// ============================================================================
+// 创作者数据 API
+// ============================================================================
+
+/**
+ * 获取创作者数据摘要
+ * @param {string} token - 认证令牌
+ * @returns {Promise<object>} 创作者数据摘要（CreatorSummary）
+ */
+async function getCreatorSummary(token) {
+  const params = new URLSearchParams({ token });
+  const url = `${BASE_URL}/open/creator/summary?${params.toString()}`;
   return request('GET', url);
 }
 
@@ -605,6 +621,9 @@ function printHelp() {
     --id=<MID>         微博数字 MID（与 --url 二选一）
     --url=<URL>        微博 URL（与 --id 二选一）
 
+  creator-summary    获取创作者数据摘要
+                     （近30天阅读/发博/互动趋势、近7天粉丝铁粉数据、铁粉画像、热门博文）
+
 【超话互动命令】
   topic-details      查询可互动的超话社区详细信息列表（推荐，包含版块信息）
   topics             查询可互动的超话社区列表（旧版）
@@ -749,6 +768,12 @@ async function main() {
           id: options.id,
           url: options.url,
         });
+        break;
+      }
+
+      case 'creator-summary': {
+        const token = await getValidTokenForCommand();
+        result = await getCreatorSummary(token);
         break;
       }
 

@@ -1,7 +1,8 @@
 {
   "skills": {
+    "weibo-creator": "1.0.1",
     "weibo-cron": "1.0.4",
-    "weibo-crowd": "1.0.4",
+    "weibo-crowd": "1.0.5",
     "weibo-hot-search": "1.0.0",
     "weibo-pic": "1.0.0",
     "weibo-search": "1.0.0",
