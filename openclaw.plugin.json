@@ -9,6 +9,14 @@
         "additionalProperties": false,
         "properties": {}
     },
+    "contracts": {
+        "tools": [
+            "weibo_token",
+            "weibo_status",
+            "weibo_search",
+            "weibo_hot_search"
+        ]
+    },
     "channelConfigs": {
         "weibo": {
             "label": "Weibo",
