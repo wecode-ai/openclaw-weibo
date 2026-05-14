@@ -133,6 +133,74 @@ GET /open/creator/summary?token={token}
 GET /open/creator/summary?token={token}
 ```
 
+#### `data.groupSummary` — 粉丝群汇总数据
+
+包含群成员活跃、互动、铁粉在群率、人数变化（近7天趋势）及成员构成分布（T-1）。
+
+**近7日趋势字段**（每个字段均为数组，共7条，每条含 `date`（yyyyMMdd）和 `num`（指标值字符串））：
+
+| 字段 | 说明 |
+|------|------|
+| `speakCountTrend` | 发言人数近7日趋势 |
+| `openCountTrend` | 打开人数近7日趋势 |
+| `avgSpeakTrend` | 人均发言条数近7日趋势 |
+| `interactCountTrend` | 群成员互动量近7日趋势 |
+| `readCountTrend` | 群成员阅读量近7日趋势 |
+| `bigfanInRateTrend` | 铁粉在群率近7日趋势（%） |
+| `memberTotalTrend` | 群成员总数近7日趋势 |
+| `joinCountTrend` | 进群人数近7日趋势 |
+| `leaveCountTrend` | 退群人数近7日趋势 |
+
+**成员构成分布（T-1 当前值）**：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `coreFanRate` | string | 铁粉百分比（%，如 "24.2"） |
+| `loveFanRate` | string | 真爱粉百分比（%，铁粉子分类） |
+| `otherBigFanRate` | string | 其他铁粉百分比（%，铁粉子分类） |
+| `otherFanRate` | string | 粉丝百分比（%） |
+| `nonFanRate` | string | 非粉百分比（%） |
+
+#### `data.groupDetails` — 单个粉丝群活跃数据列表（数组，每个群一条）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `gid` | string | 粉丝群 ID |
+| `name` | string | 粉丝群名称 |
+| `memberCount` | string | 群成员人数（近7日，T-1 当前值） |
+| `openCount` | string | 群内打开人数（近7日，T-1 当前值） |
+| `speakCount` | string | 群内发言人数（T-1 日） |
+| `avgSpeak` | string | 人均发言条数（T-1 日） |
+| `bigfanCount` | string | 群内铁粉人数（T-1 日） |
+
+#### `data.videoSummary` — 近30天视频播放汇总数据
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `trendLast30Days` | array | 近30天视频播放趋势（共30条） |
+| `last7Days` | object | 近7天视频汇总数据 |
+| `yesterday` | object | 昨日视频数据（含较前日增量） |
+
+**`trendLast30Days[]` 每日字段**：`date`、`uploadCount`（发布量）、`playCount`（播放量）、`playDuraCount`（播放时长秒）、`repostCount`、`commentCount`、`likeCount`
+
+**`yesterday` 额外增量字段**：`uploadCountIncre`、`playCountIncre`、`playDuraCountIncre`、`repostCountIncre`、`commentCountIncre`、`likeCountIncre`
+
+#### `data.fanPortrait` — 粉丝画像（截止昨日 T-1 的当前值）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `gender` | object | 粉丝性别分布：key 为 "男性"/"女性"，value 为百分比字符串 |
+| `age` | object | 粉丝年龄分布：key 为 "小于18"/"18-24"/"25-34"/"35-44"/"大于44"，value 为百分比字符串 |
+| `province` | object | 粉丝地区分布 TOP10：key 为省份名，value 为百分比字符串 |
+| `tags` | object | 粉丝兴趣分布：key 为兴趣标签，value 为百分比字符串 |
+| `fansPotential` | string | 昨日潜在粉丝量 |
+| `fansPotentialIncre` | number | 潜在粉丝较前日增量（可为负数） |
+| `fansTrans` | string | 昨日粉丝转化量 |
+| `fansTransIncre` | number | 粉丝转化较前日增量（可为负数） |
+| `bigvList` | array | 昨日新增大V关注列表（最多100个） |
+
+**`bigvList[]`**：`uid`、`screenName`、`followersCountStr`（如 "123.4万"）、`relation`（0=互未关注/1=对方关注我/2=我关注对方/3=互关）
+
 ### 注意事项
 
 1. 阅读数据为"排水阅读"（去除刷量等异常流量后的真实阅读数）
@@ -140,6 +208,9 @@ GET /open/creator/summary?token={token}
 3. 铁粉画像数据为截止昨日的当前值，非趋势数据
 4. `rankDetails` 返回最近4次周榜数据；若用户尚未上榜或数据不足，可能少于4条
 5. `details` 中 `fullScore` 和 `avgScore` 为空字符串时表示该项无满分/均值数据
+6. `groupSummary` 和 `groupDetails` 仅在用户开通粉丝群功能后有数据；未开通时可能为 `null`
+7. `videoSummary` 仅在用户有视频发布记录时有数据；无视频时可能为 `null`
+8. `fanPortrait` 为截止昨日的当前值，非趋势数据；`bigvList` 最多返回100个大V
 
 ---
 
@@ -211,3 +282,23 @@ GET /open/creator/summary?token={token}
    - 领先（用户得分 > `avgScore` 且差距 ≥ 10%）/ 持平（差距 < 10%）/ 落后（用户得分 < `avgScore` 且差距 ≥ 10%）
    - 对比最近4周该项得分变化：进步 / 退步 / 稳定（差距 < 5%）
 4. **输出分析报告**：总分排名趋势、领先项（优势）、落后项（需加强）、进步项、退步项、提升建议
+
+### 四、粉丝群数据分析
+
+若用户询问粉丝群运营情况、群活跃度、铁粉在群率等问题，请按以下步骤进行分析：
+
+**加工数据**
+
+| 加工数据 | 计算方式 |
+|----------|----------|
+| 粉丝群发言人数占比 | 发言人数 ÷ 群成员总数 × 100% |
+
+> **发言人数占比**越高，表明群越活跃，说明更多成员养成了在群内发言的习惯。
+
+**分析步骤**
+
+1. **分析群成员总数趋势**：从 `memberTotalTrend` 按日期升序，对比首末日数值，判断增长/下降/平稳（差距 < 5%）；结合 `joinCountTrend` 和 `leaveCountTrend` 分析进退群情况
+2. **分析群活跃度趋势**：从 `speakCountTrend` 分析发言人数近7日变化，计算每日发言人数占比；结合 `openCountTrend` 分析打开率与发言率的差距
+3. **分析铁粉在群率**：从 `bigfanInRateTrend` 分析近7日变化趋势；铁粉在群率越高，说明通过粉丝群运营铁粉越有效
+4. **分析各群详情**（如有多个群）：从 `groupDetails` 对比各群 `memberCount`、`speakCount`、`bigfanCount`，找出最活跃的群和需要重点运营的群
+5. **输出分析报告**：群成员总数趋势、群活跃度（发言人数及占比趋势）、铁粉在群率趋势、各群对比（如有多群）、运营建议
