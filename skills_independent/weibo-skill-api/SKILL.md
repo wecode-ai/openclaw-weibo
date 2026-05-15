@@ -4,7 +4,7 @@ description: |
   微博技能集合。包含热搜榜、智搜、用户微博、超话互动、图片/视频上传、定时任务、创作者数据分析等功能。
   首次使用请先完成配置（向用户询问 App ID 和 App Secret，写入本地配置文件并获取 Token）。
 metadata:
-  version: "1.0.1"
+  version: "1.0.2"
 ---
 
 # 微博 Skill
