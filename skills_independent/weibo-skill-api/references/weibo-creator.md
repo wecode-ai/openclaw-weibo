@@ -163,15 +163,25 @@ GET /open/creator/summary?token={token}
 
 #### `data.groupDetails` — 单个粉丝群活跃数据列表（数组，每个群一条）
 
+**T-1 当前值字段**：
+
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | `gid` | string | 粉丝群 ID |
 | `name` | string | 粉丝群名称 |
-| `memberCount` | string | 群成员人数（近7日，T-1 当前值） |
-| `openCount` | string | 群内打开人数（近7日，T-1 当前值） |
-| `speakCount` | string | 群内发言人数（T-1 日） |
-| `avgSpeak` | string | 人均发言条数（T-1 日） |
-| `bigfanCount` | string | 群内铁粉人数（T-1 日） |
+| `genderRate` | object | 群内性别分布：key 为 "男"/"女"，value 为百分比整数字符串（如 "56"） |
+| `bigfanRate` | string | 铁粉占比（T-1 日，%） |
+| `loveFanRate` | string | 真爱粉占比（T-1 日，%） |
+
+**近7日趋势字段**（每个字段均为数组，共7条，每条含 `date`（yyyy-MM-dd）和 `num`（指标值字符串））：
+
+| 字段 | 说明 |
+|------|------|
+| `memberCountTrend` | 单个群成员人数近7日趋势 |
+| `openCountTrend` | 单个群打开人数近7日趋势 |
+| `speakCountTrend` | 单个群发言人数近7日趋势 |
+| `speakTimesTrend` | 单个群发言条数近7日趋势 |
+| `joinCountTrend` | 单个群进群人数近7日趋势 |
 
 #### `data.videoSummary` — 近30天视频播放汇总数据
 
@@ -300,5 +310,5 @@ GET /open/creator/summary?token={token}
 1. **分析群成员总数趋势**：从 `memberTotalTrend` 按日期升序，对比首末日数值，判断增长/下降/平稳（差距 < 5%）；结合 `joinCountTrend` 和 `leaveCountTrend` 分析进退群情况
 2. **分析群活跃度趋势**：从 `speakCountTrend` 分析发言人数近7日变化，计算每日发言人数占比；结合 `openCountTrend` 分析打开率与发言率的差距
 3. **分析铁粉在群率**：从 `bigfanInRateTrend` 分析近7日变化趋势；铁粉在群率越高，说明通过粉丝群运营铁粉越有效
-4. **分析各群详情**（如有多个群）：从 `groupDetails` 对比各群 `memberCount`、`speakCount`、`bigfanCount`，找出最活跃的群和需要重点运营的群
+4. **分析各群详情**（如有多个群）：从 `groupDetails` 对比各群 `bigfanRate`，以及 `speakCountTrend`、`memberCountTrend` 近7日趋势，找出最活跃的群和需要重点运营的群
 5. **输出分析报告**：群成员总数趋势、群活跃度（发言人数及占比趋势）、铁粉在群率趋势、各群对比（如有多群）、运营建议
