@@ -9,7 +9,7 @@ description: |
   或当用户询问自己的 V榜排名、得分、与同领域博主对比、哪些方面需要提升时激活；
   或当用户询问粉丝群运营情况、群活跃度、铁粉在群率、视频播放数据时激活。
 metadata:
-  version: "1.0.3"
+  version: "1.0.4"
 ---
 
 # 微博创作者数据工具
@@ -219,15 +219,25 @@ node scripts/weibo-creator.js summary --token=<token>
 
 #### `data.groupDetails` — 单个粉丝群活跃数据列表（数组，每个群一条）
 
+**T-1 当前值字段**：
+
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | `gid` | string | 粉丝群 ID |
 | `name` | string | 粉丝群名称 |
-| `memberCount` | string | 群成员人数（近7日，T-1 当前值） |
-| `openCount` | string | 群内打开人数（近7日，T-1 当前值） |
-| `speakCount` | string | 群内发言人数（T-1 日） |
-| `avgSpeak` | string | 人均发言条数（T-1 日） |
-| `bigfanCount` | string | 群内铁粉人数（T-1 日） |
+| `genderRate` | object | 群内性别分布：key 为 "男"/"女"，value 为百分比整数字符串（如 "56"） |
+| `bigfanRate` | string | 铁粉占比（T-1 日，%） |
+| `loveFanRate` | string | 真爱粉占比（T-1 日，%） |
+
+**近7日趋势字段**（每个字段均为数组，共7条，每条含 `date`（yyyy-MM-dd）和 `num`（指标值字符串））：
+
+| 字段 | 说明 |
+|------|------|
+| `memberCountTrend` | 单个群成员人数近7日趋势 |
+| `openCountTrend` | 单个群打开人数近7日趋势 |
+| `speakCountTrend` | 单个群发言人数近7日趋势 |
+| `speakTimesTrend` | 单个群发言条数近7日趋势 |
+| `joinCountTrend` | 单个群进群人数近7日趋势 |
 
 ---
 
@@ -625,7 +635,7 @@ node scripts/weibo-creator.js help
 
 **第四步：分析各群详情（如有多个群）**
 
-从 `groupDetails` 中对比各群的 `memberCount`、`speakCount`、`bigfanCount`，找出最活跃的群和需要重点运营的群。
+从 `groupDetails` 中对比各群的 `bigfanRate`，以及 `speakCountTrend`、`memberCountTrend` 近7日趋势，找出最活跃的群和需要重点运营的群。
 
 **第五步：输出分析报告**
 
