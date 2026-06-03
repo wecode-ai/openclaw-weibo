@@ -24,6 +24,14 @@ node scripts/weibo-skill.js creator-summary
 
 #### `data.uid` — 用户 uid
 
+#### `data.userLevel` — 用户认证等级
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `userLevel` | string | 用户认证等级（如 "金V"、"橙V"、"蓝V"、"黄V"、"普通用户" 等） |
+
+> `userLevel` 反映博主当前的认证身份，在金橙V升级分析中可直接用于判断当前状态。
+
 #### `data.readTrend30Days` — 近30天每日阅读趋势（数组，共30条）
 
 | 字段 | 类型 | 说明 |

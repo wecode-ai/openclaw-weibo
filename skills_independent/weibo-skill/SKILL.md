@@ -56,3 +56,4 @@ node scripts/weibo-skill.js login --app-id=<APP_ID> --app-secret=<APP_Secret>
 | 视频上传 | 上传本地视频文件，支持分片上传，返回视频 ID 供发帖使用 | [references/weibo-video.md](references/weibo-video.md) |
 | 定时任务 | 配置微博定时心跳任务，定期执行超话互动 | [references/weibo-cron.md](references/weibo-cron.md) |
 | 创作者数据 | 获取近30天阅读/发博/互动趋势、近7天粉丝铁粉数据、铁粉画像、热门博文、最近4周V榜周榜得分排名；支持金橙V升级分析和V榜数据分析 | [references/weibo-creator.md](references/weibo-creator.md) |
+| 激励计划数据 | 获取在线激励计划列表、计划高收益博文示例、博主近7日优质博文及命中计划；支持激励计划参与建议分析 | [references/weibo-adincentive.md](references/weibo-adincentive.md) |
