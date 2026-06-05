@@ -9,7 +9,7 @@ description: |
   或当用户询问自己的 V榜排名、得分、与同领域博主对比、哪些方面需要提升时激活；
   或当用户询问粉丝群运营情况、群活跃度、铁粉在群率、视频播放数据时激活。
 metadata:
-  version: "1.0.4"
+  version: "1.0.5"
 ---
 
 # 微博创作者数据工具
@@ -35,6 +35,20 @@ node scripts/weibo-creator.js summary --token=<token>
 接口路径：`GET /open/creator/summary`
 
 返回的 `data` 字段为 `CreatorSummary` 对象，包含以下维度：
+
+### 0. 用户基本信息
+
+#### `data.uid` — 用户 uid
+
+#### `data.userLevel` — 用户认证等级
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `userLevel` | string | 用户认证等级（如 "金V"、"橙V"、"蓝V"、"黄V"、"普通用户" 等） |
+
+> `userLevel` 反映博主当前的认证身份，在金橙V升级分析中可直接用于判断当前状态，无需从其他数据推断。
+
+---
 
 ### 1. 近30天阅读数据
 
@@ -323,6 +337,7 @@ node scripts/weibo-creator.js help
   "message": "success",
   "data": {
     "uid": 1234567890,
+    "userLevel": "黄V",
     "readTrend30Days": [
       { "date": "2026-05-07", "totalReadCount": 12500 },
       { "date": "2026-05-06", "totalReadCount": 9800 }
@@ -473,8 +488,11 @@ node scripts/weibo-creator.js help
 
 **第一步：判断当前状态**
 
-- **已是黄V，尚未达到橙V**：铁粉数 < 100 或近30天排水阅读量 < 30 万
-- **已是橙V，尚未达到金V**：粉丝量 < 1 万 或 铁粉数 < 1000 或 近30天排水阅读量 < 1000 万
+根据 `userLevel` 字段直接判断当前认证等级：
+
+- **已是黄V，尚未达到橙V**：`userLevel` 为 "黄V"，且铁粉数 < 100 或近30天排水阅读量 < 30 万
+- **已是橙V，尚未达到金V**：`userLevel` 为 "橙V"，且粉丝量 < 1 万 或 铁粉数 < 1000 或 近30天排水阅读量 < 1000 万
+- **已是金V**：`userLevel` 为 "金V"
 
 **第二步：计算各项达标差距**
 

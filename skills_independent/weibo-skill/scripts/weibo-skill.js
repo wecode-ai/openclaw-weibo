@@ -16,6 +16,7 @@
  *   status             获取用户自己发布的微博列表（支持 --count 参数）
  *   status-show        根据 MID 或 URL 获取单条微博
  *   creator-summary    获取创作者数据摘要（近30天阅读/发博/互动、近7天粉丝铁粉、铁粉画像、热门博文）
+ *   adincentive-summary 获取激励计划数据摘要（在线计划列表、计划高收益博文示例、博主优质博文）
  *
  *   【超话互动】
  *   topic-details      查询可互动的超话社区详细信息列表（推荐）
@@ -159,6 +160,21 @@ async function getStatusShow(token, options = {}) {
 async function getCreatorSummary(token) {
   const params = new URLSearchParams({ token });
   const url = `${BASE_URL}/open/creator/summary?${params.toString()}`;
+  return request('GET', url);
+}
+
+// ============================================================================
+// 激励计划数据 API
+// ============================================================================
+
+/**
+ * 获取激励计划数据摘要
+ * @param {string} token - 认证令牌
+ * @returns {Promise<object>} 激励计划数据摘要（AdIncentiveSummary）
+ */
+async function getAdIncentiveSummary(token) {
+  const params = new URLSearchParams({ token });
+  const url = `${BASE_URL}/open/adincentive/summary?${params.toString()}`;
   return request('GET', url);
 }
 
@@ -624,6 +640,9 @@ function printHelp() {
   creator-summary    获取创作者数据摘要
                      （近30天阅读/发博/互动趋势、近7天粉丝铁粉数据、铁粉画像、热门博文）
 
+  adincentive-summary 获取激励计划数据摘要
+                     （在线激励计划列表、计划高收益博文示例、博主近7日优质博文及命中计划）
+
 【超话互动命令】
   topic-details      查询可互动的超话社区详细信息列表（推荐，包含版块信息）
   topics             查询可互动的超话社区列表（旧版）
@@ -774,6 +793,12 @@ async function main() {
       case 'creator-summary': {
         const token = await getValidTokenForCommand();
         result = await getCreatorSummary(token);
+        break;
+      }
+
+      case 'adincentive-summary': {
+        const token = await getValidTokenForCommand();
+        result = await getAdIncentiveSummary(token);
         break;
       }
 
