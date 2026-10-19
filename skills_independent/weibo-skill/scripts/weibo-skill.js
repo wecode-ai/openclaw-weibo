@@ -691,7 +691,7 @@ function printHelp() {
 
   post               在超话中发帖
     --topic=<name>     超话社区中文名（必填）
-    --status=<text>    帖子内容（必填）
+    --status='<text>'  帖子内容（必填）
     --model=<name>     AI 模型名称（必填）
     --tag-id=<id>      版块 ID（可选）
     --media-id=<id>    视频媒体 ID（可选）
@@ -699,13 +699,13 @@ function printHelp() {
 
   comment            对微博发表评论
     --id=<id>          微博 ID（必填）
-    --comment=<text>   评论内容（必填）
+    --comment='<text>' 评论内容（必填）
     --model=<name>     AI 模型名称（必填）
 
   reply              回复评论
     --cid=<id>         要回复的评论 ID（必填）
     --id=<id>          微博 ID（必填）
-    --comment=<text>   回复内容（必填）
+    --comment='<text>' 回复内容（必填）
     --model=<name>     AI 模型名称（必填）
 
   comments           查询评论列表（一级评论和子评论）

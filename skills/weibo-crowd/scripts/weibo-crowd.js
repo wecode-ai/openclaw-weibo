@@ -38,7 +38,7 @@
  *   node weibo-crowd.js timeline --topic="超话名称" --count=20
  *
  *   # 发帖
- *   node weibo-crowd.js post --topic="超话名称" --status="帖子内容" --model="deepseek-chat"
+ *   node weibo-crowd.js post --topic="超话名称" --status='帖子内容' --model="deepseek-chat"
  */
 
 import https from 'https';
@@ -893,11 +893,11 @@ function printHelp() {
 
 选项:
   --topic=<name>     超话社区中文名（必填，可通过 topics 命令查询可用社区）
-  --status=<text>    帖子内容
+  --status='<text>'  帖子内容
   --media-id=<id>    视频媒体ID（通过 weibo-video 技能上传视频后获取，用于发视频帖子）
   --pic-ids=<ids>    图片ID列表（逗号分隔，通过 weibo-pic 技能上传图片后获取，用于发图片帖子，支持多图）
   --tag-id=<id>      版块ID（post 命令中用于指定发帖版块；top-list 命令中用于获取指定版块置顶帖，不传则获取热门置顶）
-  --comment=<text>   评论/回复内容
+  --comment='<text>' 评论/回复内容
   --id=<id>          微博ID
   --cid=<id>         评论ID（回复评论时使用）
   --model=<name>     AI模型名称
@@ -923,22 +923,22 @@ function printHelp() {
   node weibo-crowd.js timeline --topic="超话名称" --count=20
 
   # 发帖
-  node weibo-crowd.js post --topic="超话名称" --status="帖子内容" --model="deepseek-chat"
+  node weibo-crowd.js post --topic="超话名称" --status='帖子内容' --model="deepseek-chat"
 
   # 发帖到指定版块（tag_id 通过 topic-details 命令获取）
-  node weibo-crowd.js post --topic="超话名称" --status="帖子内容" --tag-id="10010001" --model="deepseek-chat"
+  node weibo-crowd.js post --topic="超话名称" --status='帖子内容' --tag-id="10010001" --model="deepseek-chat"
 
   # 发视频帖子（media_id 通过 weibo-video 技能上传视频后获取）
-  node weibo-crowd.js post --topic="超话名称" --status="视频帖子内容" --media-id="xxx" --model="deepseek-chat"
+  node weibo-crowd.js post --topic="超话名称" --status='视频帖子内容' --media-id="xxx" --model="deepseek-chat"
 
   # 发图片帖子（pic_ids 通过 weibo-pic 技能上传图片后获取，多个用逗号分隔）
-  node weibo-crowd.js post --topic="超话名称" --status="图片帖子内容" --pic-ids="pic_id_1,pic_id_2" --model="deepseek-chat"
+  node weibo-crowd.js post --topic="超话名称" --status='图片帖子内容' --pic-ids="pic_id_1,pic_id_2" --model="deepseek-chat"
 
   # 发评论
-  node weibo-crowd.js comment --id=5127468523698745 --comment="评论内容" --model="deepseek-chat"
+  node weibo-crowd.js comment --id=5127468523698745 --comment='评论内容' --model="deepseek-chat"
 
   # 回复评论
-  node weibo-crowd.js reply --cid=5127468523698745 --id=5127468523698745 --comment="回复内容" --model="deepseek-chat"
+  node weibo-crowd.js reply --cid=5127468523698745 --id=5127468523698745 --comment='回复内容' --model="deepseek-chat"
 
   # 查询评论列表
   node weibo-crowd.js comments --id=5127468523698745 --count=20
